@@ -19,69 +19,58 @@ private:
     std::string id_alpha;
     std::string nombre;
 
-    // helper: trim both ends
-    static inline std::string trim(const std::string& s) {
-        size_t i = 0, j = s.size();
-        while (i < j && std::isspace(static_cast<unsigned char>(s[i]))) ++i;
-        while (j > i && std::isspace(static_cast<unsigned char>(s[j-1]))) --j;
-        return s.substr(i, j - i);
-    }
+
+
 
 public:
-    // constructores
-    PaMedicamento() noexcept : id_num(0), id_alpha(), nombre() {}
-    PaMedicamento(int idNum, const std::string& idAlpha, const std::string& nombre) noexcept
-        : id_num(idNum), id_alpha(idAlpha), nombre(nombre) {}
-    // construct from string id (throws std::invalid_argument on bad format)
-    PaMedicamento(const std::string& idNumStr, const std::string& idAlpha, const std::string& nombre)
-        : id_num(0), id_alpha(idAlpha), nombre(nombre) {
-        setIdNum(idNumStr);
+
+    // Constructores
+    PaMedicamento() {
+        this->id_num = 0;
+        this->id_alpha = "";
+        this->nombre = "";
     }
 
-    PaMedicamento(const PaMedicamento& other) = default;
-    PaMedicamento& operator=(const PaMedicamento& other) = default;
-
-    // getters
-    int getIdNum() const noexcept { return id_num; }
-    const std::string& getIdAlpha() const noexcept { return id_alpha; }
-    const std::string& getNombre() const noexcept { return nombre; }
-
-    // setters
-    void setIdNum(int id) noexcept { id_num = id; }
-
-    // parse string; lanzará std::invalid_argument si la cadena no es un entero válido
-    void setIdNum(const std::string& idStr) {
-        std::string s = trim(idStr);
-        if (s.empty()) throw std::invalid_argument("id vacío");
-        try {
-            size_t idx = 0;
-            long val = std::stol(s, &idx);
-            if (idx != s.size()) throw std::invalid_argument("id contiene caracteres no numéricos");
-            // opcional: comprobar rangos si es necesario
-            id_num = static_cast<int>(val);
-        } catch (const std::invalid_argument&) {
-            throw; // re-lanzar tal cual
-        } catch (const std::out_of_range& e) {
-            throw std::invalid_argument(std::string("id fuera de rango: ") + e.what());
-        } catch (const std::exception& e) {
-            throw std::invalid_argument(std::string("error parseando id: ") + e.what());
-        }
+    PaMedicamento(int id_num, const std::string &id_alpha, const std::string &nombre) {
+        this->id_num = id_num;
+        this->id_alpha = id_alpha;
+        this->nombre = nombre;
     }
 
-    void setIdAlpha(const std::string& s) { id_alpha = s; }
-    void setNombre(const std::string& s) { nombre = s; }
-
-    // comparadores
-    bool operator<(const PaMedicamento& other) const noexcept { return id_num < other.id_num; }
-    bool operator==(const PaMedicamento& other) const noexcept {
-        return id_num == other.id_num && id_alpha == other.id_alpha && nombre == other.nombre;
+    // Getters y Setters
+    int get_id_num() {
+        return id_num;
     }
 
-    // salida por stream
-    friend std::ostream& operator<<(std::ostream& os, const PaMedicamento& p) {
-        os << p.id_num << ';' << p.id_alpha << ';' << p.nombre;
-        return os;
+    void set_id_num(int id_num) {
+        this->id_num = id_num;
     }
+
+    std::string get_id_alpha() {
+        return id_alpha;
+    }
+
+    void set_id_alpha(const std::string &id_alpha) {
+        this->id_alpha = id_alpha;
+    }
+
+    std::string get_nombre() {
+        return nombre;
+    }
+
+    void set_nombre(const std::string &nombre) {
+        this->nombre = nombre;
+    }
+
+    // Comparadores
+    bool operator<(PaMedicamento &med) {
+        return id_num < med.get_id_num();
+    }
+
+    bool operator==(PaMedicamento &med) {
+        return id_num == med.get_id_num();
+    }
+
 };
 
 #endif // PAMEDICAMENTO_H

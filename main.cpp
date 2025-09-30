@@ -2,89 +2,149 @@
 #include <fstream>
 #include <string>
 #include <sstream>
-#include <ctime>
+#include <vector>
 #include <algorithm>
-
+#include <ctime>
+#include "VDinamico.h"
 #include "PaMedicamento.h"
-#include "VDinamico.h"   // tu implementación de plantilla (header + impl included)
 
-int main(int argc, const char * argv[]) {
-    std::ifstream is("pa_medicamentos.csv");
-    if (!is.is_open()) {
-        std::cerr << "Error de apertura en archivo pa_medicamentos.csv\n";
-        return 1;
-    }
-
-    VDinamico<PaMedicamento> vectorMedic; // vector dinámico que iremos llenando
-    std::string fila;
-    int contador = 0;
-
-    clock_t t_ini = clock();
-
-    std::stringstream columnas;
-
-    while (std::getline(is, fila)) {
-        if (fila.empty()) continue;
-
-        // preparar stringstream
-        columnas.clear();
-        columnas.str(fila);
-
-        std::string id_number_s, id_alpha, nombre;
-        std::getline(columnas, id_number_s, ';');
-        std::getline(columnas, id_alpha, ';');
-        std::getline(columnas, nombre, ';');
-
-        // quitar posible '\r' final en nombre o id_alpha
-        if (!nombre.empty() && nombre.back() == '\r') nombre.pop_back();
-        if (!id_alpha.empty() && id_alpha.back() == '\r') id_alpha.pop_back();
-        if (!id_number_s.empty() && id_number_s.back() == '\r') id_number_s.pop_back();
-
-        try {
-            PaMedicamento p(id_number_s, id_alpha, nombre);
-            vectorMedic.insertar(p); // inserta al final
-            ++contador;
-        } catch (const std::exception& e) {
-            std::cerr << "Fila " << (contador+1) << " ignorada por error: " << e.what() << " -> '" << fila << "'\n";
-            // no incrementamos contador de elementos insertados en caso de error
+// Función de búsqueda secuencial por subcadena en el nombre
+VDinamico<PaMedicamento*> buscarCompuesto(const std::string &comp, VDinamico<PaMedicamento> &vMedicamentos) {
+    VDinamico<PaMedicamento*> resultado;
+    for (unsigned int i = 0; i < vMedicamentos.tamlog(); ++i) {
+        if (vMedicamentos[i].get_nombre().find(comp) != std::string::npos) {
+            resultado.insertar(&vMedicamentos[i]);
         }
     }
+    return resultado;
+}
 
-    is.close();
-
-    double elapsed = (clock() - t_ini) / (double)CLOCKS_PER_SEC;
-
-    std::cout << "Leidos e insertados en vector: " << vectorMedic.tamLog() << " elementos.\n";
-    std::cout << "Tiempo lectura+insercion: " << elapsed << " segs.\n\n";
-
-    // Mostrar identificadores (id_num e id_alpha) de los primeros 50 elementos (o menos si hay menos)
-    unsigned int toshow = std::min<unsigned int>(50u, vectorMedic.tamLog());
-    std::cout << "Primeros " << toshow << " identificadores (id_num ; id_alpha):\n";
-    for (unsigned int i = 0; i < toshow; ++i) {
-        const PaMedicamento &pm = vectorMedic[i];
-        std::cout << (i+1) << ": " << pm.getIdNum() << " ; " << pm.getIdAlpha() <<" ; "<< pm.getNombre() << "\n";
+// Función de ordenación por nombre usando burbuja
+void ordenarPorNombreBurbuja(VDinamico<PaMedicamento> &v) {
+    unsigned int n = v.tamlog();
+    for (unsigned int i = 0; i < n - 1; ++i) {
+        for (unsigned int j = 0; j < n - i - 1; ++j) {
+            if (v[j].get_nombre() > v[j + 1].get_nombre()) {
+                std::swap(v[j], v[j + 1]);
+            }
+        }
     }
+}
 
-    if (toshow == 0) std::cout << "(vector vacío)\n";
+// Función para contar repeticiones de la primera palabra en nombre
+unsigned int contarPrimerasPalabrasRepetidas(VDinamico<PaMedicamento> &v) {
+    std::vector<std::string> primerasPalabras;
+    for (unsigned int i = 0; i < v.tamlog(); ++i) {
+        std::string nombre = v[i].get_nombre();
+        std::stringstream ss(nombre);
+        std::string primeraPalabra;
+        ss >> primeraPalabra;
+        primerasPalabras.push_back(primeraPalabra);
+    }
+    std::sort(primerasPalabras.begin(), primerasPalabras.end());
+    unsigned int count = 0;
+    for (unsigned int i = 1; i < primerasPalabras.size(); ++i) {
+        if (primerasPalabras[i] == primerasPalabras[i - 1]) {
+            count++;
+        }
+    }
+    return count;
+}
 
-    // Ordenar por id_num (PaMedicamento::operator<)
-    if (vectorMedic.tamLog() > 1) {
+int main(int argc, const char * argv[]) {
+    try {
+        VDinamico<PaMedicamento> vectorMedic;
+        std::ifstream is;
+        std::stringstream columnas;
+        std::string fila;
+
+        int id_number = 0;
+        std::string id_alpha = "";
+        std::string nombre = "";
+        // LECTURA DE ARCHIVO
+        is.open("data/pa_medicamentos.csv");
+        if (is.good()) {
+            clock_t t_ini = clock();
+            int i = 0;
+
+            while (getline(is, fila)) {
+                if (!fila.empty()) {
+                    columnas.str(fila);
+                    columnas.clear();
+
+                    std::string tmp_id;
+                    getline(columnas, tmp_id, ';');
+                    getline(columnas, id_alpha, ';');
+                    getline(columnas, nombre, ';');
+
+                    id_number = std::stoi(tmp_id);
+
+                    PaMedicamento aux(id_number, id_alpha, nombre);
+                    vectorMedic.insertar(aux, i);
+                    ++i;
+                }
+            }
+
+            is.close();
+            std::cout << "Tiempo lectura: " << ((clock() - t_ini) / (float)CLOCKS_PER_SEC) << " segs." << std::endl;
+        } else {
+            std::cout << "Error de apertura en archivo" << std::endl;
+            return 1;
+        }
+
+        // MOSTRAR PRIMEROS 50 ELEMENTOS SIN ORDENAR
+        std::cout << "Primeros 50 medicamentos (sin ordenar):" << std::endl;
+        unsigned int tamMostrar = std::min(50u, vectorMedic.tamlog());
+        for (unsigned int i = 0; i < tamMostrar; ++i) {
+            std::cout << vectorMedic[i].get_id_num() << " - " << vectorMedic[i].get_nombre() << std::endl;
+        }
+        std::cout << std::endl;
+
+        // ORDENAR POR ID_NUM
+        clock_t t_ini = clock();
         vectorMedic.ordenar();
+
+        std::cout << "Primeros 50 medicamentos (ordenados por id_num):" << std::endl;
+        for (unsigned int i = 0; i < tamMostrar; ++i) {
+            std::cout << vectorMedic[i].get_id_num() << " - " << vectorMedic[i].get_nombre() << std::endl;
+        }
+        std::cout << "Tiempo ordenación: " << ((clock() - t_ini) / (float)CLOCKS_PER_SEC) << " segs." << std::endl;
+
+        // BUSQUEDA BINARIA
+        int idsABuscar[] = {350, 409, 820, 9009, 12370};
+        for (int id : idsABuscar) {
+            PaMedicamento temp(id, "", "");
+            int pos = vectorMedic.busquedaBin(temp);
+            if (pos != -1)
+                std::cout << "Medicamento con ID " << id << " encontrado en posición " << pos << std::endl;
+            else
+                std::cout << "Medicamento con ID " << id << " NO encontrado" << std::endl;
+        }
+        std::cout << std::endl;
+
+        // BUSQUEDA POR SUBCADENA "aceite"
+        VDinamico<PaMedicamento*> aceites = buscarCompuesto("aceite", vectorMedic);
+        std::cout << "Medicamentos que contienen 'aceite':" << std::endl;
+        for (unsigned int i = 0; i < aceites.tamlog(); ++i) {
+            std::cout << aceites[i]->get_id_num() << " - " << aceites[i]->get_nombre() << std::endl;
+        }
+        std::cout << std::endl;
+
+        // ORDENAR POR NOMBRE (burbuja)
+        ordenarPorNombreBurbuja(vectorMedic);
+        std::cout << "Primeros 50 medicamentos (ordenados por nombre):" << std::endl;
+        for (unsigned int i = 0; i < tamMostrar; ++i) {
+            std::cout << vectorMedic[i].get_nombre() << std::endl;
+        }
+        std::cout << std::endl;
+
+        // CONTAR PRIMERAS PALABRAS REPETIDAS
+        unsigned int repeticiones = contarPrimerasPalabrasRepetidas(vectorMedic);
+        std::cout << "Número de primeras palabras repetidas al menos una vez: " << repeticiones << std::endl;
+
+    } catch (const std::exception &e) {
+        std::cerr << "Error: " << e.what() << std::endl;
     }
-
-    // Mostrar los primeros 50 elementos (o menos)
-    unsigned int toshow2 = std::min<unsigned int>(50u, vectorMedic.tamLog());
-    std::cout << "Mostrando datos de los primeros " << toshow << " medicamentos (id_num ; id_alpha ; nombre):\n\n";
-    for (unsigned int i = 0; i < toshow; ++i) {
-        const PaMedicamento &pm = vectorMedic[i];
-        std::cout << (i+1) << ": "
-                  << pm.getIdNum() << " ; "
-                  << pm.getIdAlpha() << " ; "
-                  << pm.getNombre() << "\n";
-    }
-
-    if (toshow == 0) std::cout << "(vector vacío)\n";
-
 
     return 0;
 }

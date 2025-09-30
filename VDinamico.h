@@ -1,183 +1,257 @@
-// VDinamico.h  (versión corregida)
+//
+// Integrantes de la pareja:
+//Javier Martinez Gonzalez - jmg00144@red.ujaen.es
+//Maria Lucia Gomez Gutierrez - mlgg0019@red.ujaen.es
+//
+
 #ifndef VDINAMICO_H
 #define VDINAMICO_H
 
-#include <algorithm>
-#include <stdexcept>
-#include <climits>
-#include <cstddef>
+#include <stdexcept>  // Libreria usada para las excepciones
+#include <algorithm>  // Libreria usada para la función sort
+#include <iostream>
 
-// VDinamico<T> - Interfaz
-// - Implementa un vector dinámico que mantiene el tamaño físico como potencia de 2.
-// - Proporciona: constructor por defecto, constructor con tamaño lógico, copia total,
-//   copia parcial (desde posición y con número de elementos), operador=, operadores [],
-//   insertar, borrar, ordenar, tamLog() y destructor.
-// - Lanza std::out_of_range en accesos/operaciones fuera de rango.
 
-template<typename T>
+
+template <typename T>
 class VDinamico {
 private:
-  unsigned int tamal, tamaf;
-  T *v;
+
+    T* mem;            // Vector
+    unsigned int tamal = 0;
+    unsigned int tamaf = 1;  // Tamaño del vector
+
+
 public:
-  VDinamico();
-  VDinamico(unsigned int tamlog);
-  VDinamico(const VDinamico<T>& origen);
-  VDinamico(const VDinamico<T>& origen, unsigned int posicionInicial, unsigned int numElementos);
-  VDinamico<T>& operator=(const VDinamico<T>& otro);
 
-  T& operator[](unsigned pos);
-  const T& operator[](unsigned pos) const;
 
-  void insertar(const T& dato, unsigned int pos = UINT_MAX);
-  T borrar (unsigned int pos = UINT_MAX);
-  void ordenar();
-  unsigned int tamLog() const { return tamal; }
 
-  ~VDinamico();
+    // Constructor por defecto
+    VDinamico();
+
+    //Constructor parametrizado
+    VDinamico(unsigned int tamal);
+
+    // Constructor copia
+    VDinamico(const VDinamico<T>& origen);
+
+    // Constructor de copia parcial
+    VDinamico(const VDinamico<T>& origen, unsigned int posicionInicial, unsigned int numElementos);
+
+    // Operador de asignación
+    VDinamico<T>& operator=(const VDinamico<T>& origen);
+
+    // Operador [] para acceso lectura/escritura
+    T& operator[](unsigned int index);
+
+    // Ordenar el vector de menor a mayor utilizando la función sort de algorithm
+    void ordenar();
+
+    //Ordenar el vector de menor a mayor utilizando el algoritmo Quicksort
+    void quicksort(int primero, int ultimo);
+
+    //Insertar un dato en una posición dada:
+    void insertar(const T& dato, unsigned int pos = UINT_MAX);
+
+    //borrae un dato:
+    T borrar(unsigned int pos = UINT_MAX);
+
+    int busquedaBin(T &dato);
+
+    unsigned int tamlog();
+
+    // Destructor
+    ~VDinamico();
 };
 
-// Implementación (definiciones de plantilla). Separamos en un fichero .cpp que debe
-// ser incluido al final de este encabezado para que las definiciones estén disponibles
-// en tiempo de compilación.
 
-
-#endif // VDINAMICO_H
-
-
-// -----------------------------------------------------------------------------
-// VDinamico.cpp
-// Implementación de las funciones plantilla.
-// Este fichero está pensado para ser incluido por VDinamico.h al final del header.
-// -----------------------------------------------------------------------------
-
-#include <cmath> // pow (no necesario, pero por claridad)
-
-// Utilidad: siguiente potencia de 2 mayor o igual que n (mínimo 1)
-static unsigned int siguiente_pot2(unsigned int n) {
-    unsigned int p = 1;
-    while (p < n) p <<= 1;
-    return p;
+//Constructor por defecto
+template <typename T>
+VDinamico<T>::VDinamico() {
+    mem = new T[tamaf];
+    std::cout << "Espacio creado para " << 1 << " dato." << std::endl;
 }
 
-// Constructor por defecto
-template<typename T>
-VDinamico<T>::VDinamico() : tamal(0), tamaf(1), v(new T[1]) {}
-
-// Constructor con tamaño lógico
-template<typename T>
-VDinamico<T>::VDinamico(unsigned int tamlog) : tamal(tamlog) {
-    tamaf = siguiente_pot2(tamlog == 0 ? 1u : tamlog);
-    v = new T[tamaf];
+//Constructor parametrizado
+template <typename T>
+VDinamico<T>::VDinamico(unsigned int tamlog) {
+    tamal = tamlog;
+    int aux;
+    for(int i=1; i<=tamal; i=i*2)
+    {
+        aux = i;
+    }
+    tamaf = aux*2;
+    mem = new T[tamaf];std::cout << "Espacio creado para " << tamaf << " datos." << std::endl;
 }
 
-// Constructor copia (completo)
-template<typename T>
-VDinamico<T>::VDinamico(const VDinamico<T>& origen) : tamal(origen.tamal) {
-    tamaf = siguiente_pot2(tamal == 0 ? 1u : tamal);
-    v = new T[tamaf];
-    for (unsigned int i = 0; i < tamal; ++i) v[i] = origen.v[i];
+// Constructor copia
+template <typename T>
+VDinamico<T>::VDinamico(const VDinamico<T>& origen) {
+    tamaf = origen.tamaf;
+    tamal = origen.tamal;
+    mem = new T[tamaf];
+    for (unsigned int i = 0; i < tamal; ++i) {
+        mem[i] = origen.mem[i];
+    }
+    std::cout << "Copia completa creada." << std::endl;
 }
 
-// Constructor copia parcial
-template<typename T>
+// Constructor de copia parcial
+template <typename T>
 VDinamico<T>::VDinamico(const VDinamico<T>& origen, unsigned int posicionInicial, unsigned int numElementos) {
-    if (posicionInicial > origen.tamal) throw std::out_of_range("posicionInicial fuera de rango");
-    if (posicionInicial + numElementos > origen.tamal) throw std::out_of_range("rango (posicionInicial+numElementos) fuera de tamal");
     tamal = numElementos;
-    tamaf = siguiente_pot2(tamal == 0 ? 1u : tamal);
-    v = new T[tamaf];
-    for (unsigned int i = 0; i < tamal; ++i) v[i] = origen.v[posicionInicial + i];
+    //La excepción salta si el tamaño del vector que se quiere generar es superior al inicial
+    if (posicionInicial + numElementos > origen.tamaf) {
+        throw std::out_of_range("Rango fuera de los límites.");
+    }
+    int aux;
+    for(int i=1; i<=numElementos; i=i*2)
+      {
+      aux = i;
+      }
+      numElementos = aux*2;
+
+    mem = new T[numElementos];
+    for (unsigned int i = 0; i < numElementos; ++i) {
+        mem[i] = origen.mem[posicionInicial + i];
+    }
+    std::cout << "Copia parcial creada." << numElementos << std::endl;
 }
 
 // Operador de asignación
-template<typename T>
-VDinamico<T>& VDinamico<T>::operator=(const VDinamico<T>& otro) {
-    if (this == &otro) return *this;
-    // liberar memoria actual
-    delete[] v;
-    tamal = otro.tamal;
-    tamaf = siguiente_pot2(tamal == 0 ? 1u : tamal);
-    v = new T[tamaf];
-    for (unsigned int i = 0; i < tamal; ++i) v[i] = otro.v[i];
-    return *this;
-}
-
-// Operadores []
-template<typename T>
-T& VDinamico<T>::operator[](unsigned pos) {
-    if (pos >= tamal) throw std::out_of_range("operator[]: pos fuera de rango");
-    return v[pos];
-}
-
-template<typename T>
-const T& VDinamico<T>::operator[](unsigned pos) const {
-    if (pos >= tamal) throw std::out_of_range("operator[] const: pos fuera de rango");
-    return v[pos];
-}
-
-// Insertar
-template<typename T>
-void VDinamico<T>::insertar(const T& dato, unsigned int pos) {
-    if (pos == UINT_MAX) pos = tamal; // insertar al final
-    if (pos > tamal) throw std::out_of_range("insertar: pos fuera de rango");
-
-    // si no hay espacio, duplicar tamaf
-    if (tamal + 1 > tamaf) {
-        unsigned int nueva_tamaf = tamaf == 0 ? 1 : tamaf << 1;
-        T* nuevo = new T[nueva_tamaf];
-        // copiar antes de pos
-        for (unsigned int i = 0; i < pos; ++i) nuevo[i] = v[i];
-        // insertar
-        nuevo[pos] = dato;
-        // copiar resto
-        for (unsigned int i = pos; i < tamal; ++i) nuevo[i+1] = v[i];
-        delete[] v;
-        v = nuevo;
-        tamaf = nueva_tamaf;
-    } else {
-        // desplazar hacia la derecha desde el final hasta pos
-        for (unsigned int i = tamal; i > pos; --i) v[i] = v[i-1];
-        v[pos] = dato;
+template <typename T>
+VDinamico<T>& VDinamico<T>::operator=(const VDinamico<T>& origen) {
+    if (this != &origen) { // Evitar autoasignación
+        delete[] mem;
+        tamaf = origen.tamaf;
+        tamal = origen.tamal;
+        mem = new T[tamaf];
+        for (unsigned int i = 0; i < tamal; ++i) {
+            mem[i] = origen.mem[i];
+        }
+        std::cout << "Asignación completada." << std::endl;
+        return *this;
+    }else{
+        throw std::string("El vector introducido es el mismo");
     }
-    ++tamal;
+
 }
 
-// Borrar
+// Operador [] para acceso a lectura/escritura de un dato
+template <typename T>
+T& VDinamico<T>::operator[](unsigned int pos) {
+    if (pos >= tamal) {
+        throw std::out_of_range("Índice fuera del rango.");
+    }
+    return mem[pos];
+}
+
+// Ordenar el vector usando la función sort de <algorithm>
+template <typename T>
+void VDinamico<T>::ordenar() {
+
+    std::sort(mem, mem + tamal); // La función sort
+}
+
+
+
+
+
+template <typename T>
+void VDinamico<T>::insertar(const T& dato, unsigned int pos) {
+    if(pos > tamal) {
+        throw std::out_of_range("Posicion fuera del rango");
+    }
+
+    // Si se inserta al final
+    if(pos == UINT_MAX) pos = tamal;
+
+    // Expandir memoria si hace falta
+    if(tamaf <= tamal + 1) {
+        T* vaux = new T[tamaf * 2];
+        for(unsigned int i = 0; i < tamal; i++)
+            vaux[i] = mem[i];
+        delete[] mem;
+        mem = vaux;
+        tamaf *= 2;
+    }
+
+    // Mover elementos si no es al final
+    for(int i = tamal - 1; i >= (int)pos; --i) {
+        mem[i + 1] = mem[i];
+    }
+
+    mem[pos] = dato;
+    tamal++;
+}
+
+
+//Borrar
 template<typename T>
 T VDinamico<T>::borrar(unsigned int pos) {
-    if (tamal == 0) throw std::out_of_range("borrar: vector vacio");
-    if (pos == UINT_MAX) pos = tamal - 1; // borrar ultimo
-    if (pos >= tamal) throw std::out_of_range("borrar: pos fuera de rango");
-
-    T valor = v[pos];
-    // desplazar a la izquierda
-    for (unsigned int i = pos; i + 1 < tamal; ++i) v[i] = v[i+1];
-    --tamal;
-
-    // reducir tamaf si corresponde (mantener potencia de 2 >= max(1, tamal))
-    unsigned int requerido = siguiente_pot2(tamal == 0 ? 1u : tamal);
-    if (requerido < tamaf) {
-        T* nuevo = new T[requerido];
-        for (unsigned int i = 0; i < tamal; ++i) nuevo[i] = v[i];
-        delete[] v;
-        v = nuevo;
-        tamaf = requerido;
+    T vaux;
+    T *vaux2;
+    if(pos==UINT_MAX){
+        vaux=mem[tamal-1];
+        tamal--;
+        if((tamal*3)<tamaf){
+            tamaf=tamaf/2;
+            vaux2=new T [tamaf];
+            for(int i=0;i<tamal;i++) {
+                vaux2[i] = mem[i];
+            }
+            delete []mem;
+            mem=vaux2;
+        }
+    }else {
+        vaux = mem[pos];
+        for(unsigned i=pos;i<tamal-1;i++){
+            mem[i]=mem[i+1];
+        }
+        tamal--;
+        if ((tamal*3)<tamaf) {
+            tamaf = tamaf / 2;
+            vaux2 = new T[tamaf];
+            for (int i = 0; i < tamal; i++) {
+                vaux2[i] = mem[i];
+            }
+            delete[] mem;
+            mem = vaux2;
+        }
     }
-
-    return valor;
+    return vaux;
 }
 
-// Ordenar
+
+template<class T>
+int VDinamico<T>::busquedaBin(T &dato)  {
+    int inf = 0;
+    int sup = tamal - 1;
+    int curIn;
+    while (inf <= sup) {
+        curIn = (inf + sup) / 2;
+        if (mem[curIn] == dato)
+            return curIn;
+        else
+            if (mem[curIn] < dato) {
+                inf = curIn + 1;
+            }else sup = curIn - 1;
+    }
+    return -1;
+}
+
 template<typename T>
-void VDinamico<T>::ordenar() {
-    std::sort(v, v + tamal);
+unsigned int VDinamico<T>::tamlog() {
+    return tamal;
 }
+
 
 // Destructor
-template<typename T>
+template <typename T>
 VDinamico<T>::~VDinamico() {
-    delete[] v;
+    delete[] mem;
+    std::cout << "Memoria liberada." << std::endl;
 }
 
-// Fin de VDinamico.cpp
+#endif //VDINAMICO_H
