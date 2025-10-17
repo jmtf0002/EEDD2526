@@ -1,8 +1,4 @@
-//
-// Integrantes de la pareja:
-//Javier Martinez Gonzalez - jmg00144@red.ujaen.es
-//Maria Lucia Gomez Gutierrez - mlgg0019@red.ujaen.es
-//
+
 
 #ifndef VDINAMICO_H
 #define VDINAMICO_H

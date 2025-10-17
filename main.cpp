@@ -5,145 +5,141 @@
 #include <vector>
 #include <algorithm>
 #include <ctime>
+
+#include "ListaEnlazada.h"
 #include "VDinamico.h"
 #include "PaMedicamento.h"
 
-// Función de búsqueda secuencial por subcadena en el nombre
-VDinamico<PaMedicamento*> buscarCompuesto(const std::string &comp, VDinamico<PaMedicamento> &vMedicamentos) {
-    VDinamico<PaMedicamento*> resultado;
-    for (unsigned int i = 0; i < vMedicamentos.tamlog(); ++i) {
-        if (vMedicamentos[i].get_nombre().find(comp) != std::string::npos) {
-            resultado.insertar(&vMedicamentos[i]);
-        }
-    }
-    return resultado;
-}
+/**  @author Javier Martínez González mgg00000@red.ujaen.es
+     @author Jose María Torraleja Franco jmtf0002@red.ujaen.es */
 
-// Función de ordenación por nombre usando burbuja
-void ordenarPorNombreBurbuja(VDinamico<PaMedicamento> &v) {
-    unsigned int n = v.tamlog();
-    for (unsigned int i = 0; i < n - 1; ++i) {
-        for (unsigned int j = 0; j < n - i - 1; ++j) {
-            if (v[j].get_nombre() > v[j + 1].get_nombre()) {
-                std::swap(v[j], v[j + 1]);
-            }
-        }
-    }
-}
 
-// Función para contar repeticiones de la primera palabra en nombre
-unsigned int contarPrimerasPalabrasRepetidas(VDinamico<PaMedicamento> &v) {
-    std::vector<std::string> primerasPalabras;
-    for (unsigned int i = 0; i < v.tamlog(); ++i) {
-        std::string nombre = v[i].get_nombre();
-        std::stringstream ss(nombre);
-        std::string primeraPalabra;
-        ss >> primeraPalabra;
-        primerasPalabras.push_back(primeraPalabra);
-    }
-    std::sort(primerasPalabras.begin(), primerasPalabras.end());
-    unsigned int count = 0;
-    for (unsigned int i = 1; i < primerasPalabras.size(); ++i) {
-        if (primerasPalabras[i] == primerasPalabras[i - 1]) {
-            count++;
-        }
-    }
-    return count;
-}
+
 
 int main(int argc, const char * argv[]) {
-    try {
-        VDinamico<PaMedicamento> vectorMedic;
-        std::ifstream is;
-        std::stringstream columnas;
-        std::string fila;
+    ListaEnlazada<int> lista;
 
-        int id_number = 0;
-        std::string id_alpha = "";
-        std::string nombre = "";
-        // LECTURA DE ARCHIVO
-        is.open("data/pa_medicamentos.csv");
-        if (is.good()) {
-            clock_t t_ini = clock();
-            int i = 0;
+    // 1) Insertar al final 101..200
+    for (int i = 101; i <= 200; ++i) {
+        int v = i;
+        lista.insertarFinal(v);
+    }
 
-            while (getline(is, fila)) {
-                if (!fila.empty()) {
-                    columnas.str(fila);
-                    columnas.clear();
+    std::cout << "Después de insertar 101..200 al final:\n";
+    {
+        auto it = lista.iteradorInicio();
+        for (int i = 0; i < lista.tam(); ++i) {
+            std::cout << it.dato() << " ";
+            it.siguiente();
+        }
+        std::cout << "\n\n";
+    }
 
-                    std::string tmp_id;
-                    getline(columnas, tmp_id, ';');
-                    getline(columnas, id_alpha, ';');
-                    getline(columnas, nombre, ';');
+    // 2) Insertar por el comienzo 98..1 (decreciente)
+    for (int i = 98; i >= 1; --i) {
+        int v = i;
+        lista.insertarInicio(v);
+    }
 
-                    id_number = std::stoi(tmp_id);
+    std::cout << "Después de insertar 98..1 al inicio:\n";
+    {
+        auto it = lista.iteradorInicio();
+        for (int i = 0; i < lista.tam(); ++i) {
+            std::cout << it.dato() << " ";
+            it.siguiente();
+        }
+        std::cout << "\n\n";
+    }
 
-                    PaMedicamento aux(id_number, id_alpha, nombre);
-                    vectorMedic.insertar(aux, i);
-                    ++i;
-                }
-            }
-
-            is.close();
-            std::cout << "Tiempo lectura: " << ((clock() - t_ini) / (float)CLOCKS_PER_SEC) << " segs." << std::endl;
+    // 3) Insertar 100 delante del 101
+    {
+        auto it = lista.iteradorInicio();
+        bool found = false;
+        while (it.haySiguiente()) {
+            if (it.dato() == 101) { found = true; break; }
+            it.siguiente();
+        }
+        if (found) {
+            int val100 = 100;
+            lista.insertarDelante(it, val100);
         } else {
-            std::cout << "Error de apertura en archivo" << std::endl;
-            return 1;
+            std::cerr << "No se encontró 101 para insertar delante.\n";
         }
+    }
 
-        // MOSTRAR PRIMEROS 50 ELEMENTOS SIN ORDENAR
-        std::cout << "Primeros 50 medicamentos (sin ordenar):" << std::endl;
-        unsigned int tamMostrar = std::min(50u, vectorMedic.tamlog());
-        for (unsigned int i = 0; i < tamMostrar; ++i) {
-            std::cout << vectorMedic[i].get_id_num() << " - " << vectorMedic[i].get_nombre() << std::endl;
+    std::cout << "Después de insertar 100 delante de 101:\n";
+    {
+        auto it = lista.iteradorInicio();
+        for (int i = 0; i < lista.tam(); ++i) {
+            std::cout << it.dato() << " ";
+            it.siguiente();
         }
-        std::cout << std::endl;
+        std::cout << "\n\n";
+    }
 
-        // ORDENAR POR ID_NUM
-        clock_t t_ini = clock();
-        vectorMedic.ordenar();
-
-        std::cout << "Primeros 50 medicamentos (ordenados por id_num):" << std::endl;
-        for (unsigned int i = 0; i < tamMostrar; ++i) {
-            std::cout << vectorMedic[i].get_id_num() << " - " << vectorMedic[i].get_nombre() << std::endl;
+    // 4) Insertar 99 detrás del 98
+    {
+        auto it = lista.iteradorInicio();
+        bool found = false;
+        while (it.haySiguiente()) {
+            if (it.dato() == 98) { found = true; break; }
+            it.siguiente();
         }
-        std::cout << "Tiempo ordenación: " << ((clock() - t_ini) / (float)CLOCKS_PER_SEC) << " segs." << std::endl;
-
-        // BUSQUEDA BINARIA
-        int idsABuscar[] = {350, 409, 820, 9009, 12370};
-        for (int id : idsABuscar) {
-            PaMedicamento temp(id, "", "");
-            int pos = vectorMedic.busquedaBin(temp);
-            if (pos != -1)
-                std::cout << "Medicamento con ID " << id << " encontrado en posición " << pos << std::endl;
-            else
-                std::cout << "Medicamento con ID " << id << " NO encontrado" << std::endl;
+        if (found) {
+            int val99 = 99;
+            lista.insertarDetras(it, val99);
+        } else {
+            std::cerr << "No se encontró 98 para insertar detrás.\n";
         }
-        std::cout << std::endl;
+    }
 
-        // BUSQUEDA POR SUBCADENA "aceite"
-        VDinamico<PaMedicamento*> aceites = buscarCompuesto("aceite", vectorMedic);
-        std::cout << "Medicamentos que contienen 'aceite':" << std::endl;
-        for (unsigned int i = 0; i < aceites.tamlog(); ++i) {
-            std::cout << aceites[i]->get_id_num() << " - " << aceites[i]->get_nombre() << std::endl;
+    std::cout << "Después de insertar 99 detrás de 98:\n";
+    {
+        auto it = lista.iteradorInicio();
+        for (int i = 0; i < lista.tam(); ++i) {
+            std::cout << it.dato() << " ";
+            it.siguiente();
         }
-        std::cout << std::endl;
+        std::cout << "\n\n";
+    }
 
-        // ORDENAR POR NOMBRE (burbuja)
-        ordenarPorNombreBurbuja(vectorMedic);
-        std::cout << "Primeros 50 medicamentos (ordenados por nombre):" << std::endl;
-        for (unsigned int i = 0; i < tamMostrar; ++i) {
-            std::cout << vectorMedic[i].get_nombre() << std::endl;
+    // 5) Borrar los 10 primeros y los 10 últimos
+    for (int i = 0; i < 10; ++i) lista.borrarInicio();
+    for (int i = 0; i < 10; ++i) lista.borrarFinal();
+
+    std::cout << "Después de borrar 10 primeros y 10 últimos:\n";
+    {
+        auto it = lista.iteradorInicio();
+        for (int i = 0; i < lista.tam(); ++i) {
+            std::cout << it.dato() << " ";
+            it.siguiente();
         }
-        std::cout << std::endl;
+        std::cout << "\n\n";
+    }
 
-        // CONTAR PRIMERAS PALABRAS REPETIDAS
-        unsigned int repeticiones = contarPrimerasPalabrasRepetidas(vectorMedic);
-        std::cout << "Número de primeras palabras repetidas al menos una vez: " << repeticiones << std::endl;
+    // 6) Borrar todos los múltiplos de 10
+    {
+        auto it = lista.iteradorInicio();
+        while (it.haySiguiente()) {
+            int val = it.dato();
+            if (val % 10 == 0) {
+                ListaEnlazada<int>::Iterador toDel = it;
+                it.siguiente();
+                lista.borrar(toDel);
+            } else {
+                it.siguiente();
+            }
+        }
+    }
 
-    } catch (const std::exception &e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+    std::cout << "Después de borrar múltiplos de 10:\n";
+    {
+        auto it = lista.iteradorInicio();
+        for (int i = 0; i < lista.tam(); ++i) {
+            std::cout << it.dato() << " ";
+            it.siguiente();
+        }
+        std::cout << "\n\n";
     }
 
     return 0;
