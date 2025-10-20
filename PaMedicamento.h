@@ -3,74 +3,60 @@
 
 #include <string>
 #include <ostream>
-#include <stdexcept>
-#include <sstream>
-#include <cctype>
-#include <algorithm>
-
-// Clase PaMedicamento
-// - Atributos: id_num (int), id_alpha (string), nombre (string)
-// - Constructores, getters/setters, comparadores y salida por stream.
-// - setIdNum(const std::string&) lanza std::invalid_argument si la cadena no es un entero válido.
+#include "Laboratorio.h"
 
 class PaMedicamento {
 private:
     int id_num;
     std::string id_alpha;
     std::string nombre;
-
-
-
+    Laboratorio *laboratorioAsignado;
 
 public:
-
     // Constructores
-    PaMedicamento() {
-        this->id_num = 0;
-        this->id_alpha = "";
-        this->nombre = "";
-    }
+    PaMedicamento() : id_num(0), id_alpha(""), nombre(""), laboratorioAsignado(nullptr) {}
 
-    PaMedicamento(int id_num, const std::string &id_alpha, const std::string &nombre) {
-        this->id_num = id_num;
-        this->id_alpha = id_alpha;
-        this->nombre = nombre;
-    }
+    PaMedicamento(int id_num, const std::string &id_alpha, const std::string &nombre)
+        : id_num(id_num), id_alpha(id_alpha), nombre(nombre), laboratorioAsignado(nullptr) {}
 
-    // Getters y Setters
-    int get_id_num() {
+    // --- Getters y Setters (Getters ahora son const) ---
+    int get_id_num() const {
         return id_num;
     }
-
     void set_id_num(int id_num) {
         this->id_num = id_num;
     }
 
-    std::string get_id_alpha() {
+    std::string get_id_alpha() const {
         return id_alpha;
     }
-
     void set_id_alpha(const std::string &id_alpha) {
         this->id_alpha = id_alpha;
     }
 
-    std::string get_nombre() {
+    std::string get_nombre() const {
         return nombre;
     }
-
     void set_nombre(const std::string &nombre) {
         this->nombre = nombre;
     }
 
-    // Comparadores
-    bool operator<(PaMedicamento &med) {
+    // --- Funciones de Laboratorio (getter es const) ---
+    void servidoPor(Laboratorio *lab) {
+        this->laboratorioAsignado = lab;
+    }
+    Laboratorio* getLaboratorio() const {
+        return laboratorioAsignado;
+    }
+
+    // --- Comparadores (ahora son const) ---
+    bool operator<(const PaMedicamento &med) const {
         return id_num < med.get_id_num();
     }
 
-    bool operator==(PaMedicamento &med) {
+    bool operator==(const PaMedicamento &med) const {
         return id_num == med.get_id_num();
     }
-
 };
 
 #endif // PAMEDICAMENTO_H

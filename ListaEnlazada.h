@@ -12,7 +12,7 @@ class ListaEnlazada {
         X dato;
         Nodo *ant, *sig;
 
-        Nodo(X &aDato, Nodo *aAnt, Nodo *aSig) : dato(aDato), ant(aAnt), sig(aSig) {}
+        Nodo(const X &aDato, Nodo *aAnt, Nodo *aSig) : dato(aDato), ant(aAnt), sig(aSig) {}
     };
 
     Nodo<T> *cabecera, *cola;
@@ -29,7 +29,7 @@ public:
 
         bool hayAnterior() { return nodo != 0; }
 
-        bool haySiguiente() { return nodo != 0; }
+        bool haySiguiente() const { return nodo != 0; }
 
         void anterior() { if (nodo) nodo = nodo->ant; }
 
@@ -44,13 +44,13 @@ public:
 
     ListaEnlazada &operator=(ListaEnlazada &l);
 
-    Iterador iteradorInicio() { return Iterador(cabecera); }
+    Iterador iteradorInicio() const { return Iterador(cabecera); }
 
     Iterador iteradorFinal() { return Iterador(cola); }
 
     void insertarInicio(T &dato);
 
-    void insertarFinal(T &dato);
+    void insertarFinal(const T &dato);
 
     void insertar(Iterador &p, T &dato);
 
@@ -68,7 +68,7 @@ public:
 
     T &final() { return cola->dato; }
 
-    int tam() { return tama; }
+    int tam() const { return tama; }
 
     ListaEnlazada<T> concatena(const ListaEnlazada<T> &p);
 
@@ -107,7 +107,7 @@ void ListaEnlazada<T>::insertarInicio(T &dato) {
 
 // Inserción al final de la lista
 template<typename T>
-void ListaEnlazada<T>::insertarFinal(T &dato) {
+void ListaEnlazada<T>::insertarFinal(const T &dato) {
     Nodo<T> *nuevo;
     Nodo<T> *eaux = 0;
     nuevo = new Nodo<T>(dato, cola, eaux);
