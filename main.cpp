@@ -11,7 +11,7 @@
 #include "PaMedicamento.h"
 #include "MediExpress.h"
 
-/**  @author Javier Martínez González mgg00000@red.ujaen.es
+/**  @author Javier Martínez González jmg00144@red.ujaen.es
      @author Jose María Torraleja Franco jmtf0002@red.ujaen.es */
 
 
