@@ -39,6 +39,8 @@ public:
     unsigned int totalMedicamentos() const { return principiosActivos.tamlog(); }
     int totalLaboratorios() const { return laboratorios.tam(); }
     int contarMedicamentosSinLab() const;
+
+    int eliminarLabsPorCiudad(const std::string& ciudad);
 };
 
 // --- Implementación del Constructor (adaptado para punteros) ---
@@ -202,6 +204,78 @@ void MediExpress::asignarMedsSinLabAMadrid() {
         it_lab.siguiente();
     }
     // No es necesario buscar el medicamento original, porque ya estamos trabajando con punteros a ellos.
+}
+
+// --- Implementación del método de eliminación (CORREGIDO) ---
+
+// --- Implementación del método de eliminación (ADAPTADO A TU 'borrar') ---
+
+int MediExpress::eliminarLabsPorCiudad(const std::string& ciudad) {
+    VDinamico<Laboratorio*> labs_a_eliminar;
+
+    // Paso 1: Identificar los punteros de los laboratorios que se van a eliminar.
+    // Esta parte no cambia.
+    auto it_lab = laboratorios.iteradorInicio();
+    while (it_lab.haySiguiente()) {
+        if (it_lab.dato()->getLocalidad().find(ciudad) != std::string::npos) {
+            labs_a_eliminar.insertar(it_lab.dato(), labs_a_eliminar.tamlog());
+        }
+        it_lab.siguiente();
+    }
+
+    if (labs_a_eliminar.tamlog() == 0) {
+        return 0; // No hay laboratorios en esa ciudad para eliminar.
+    }
+
+    // Paso 2: Desvincular los medicamentos. Esta parte no cambia.
+    for (unsigned int i = 0; i < principiosActivos.tamlog(); ++i) {
+        Laboratorio* lab_asignado = principiosActivos[i]->getLaboratorio();
+        if (lab_asignado) {
+            for (unsigned int j = 0; j < labs_a_eliminar.tamlog(); ++j) {
+                if (lab_asignado == labs_a_eliminar[j]) {
+                    principiosActivos[i]->servidoPor(nullptr);
+                    break;
+                }
+            }
+        }
+    }
+
+    // --- PASO 3 CORREGIDO ---
+    // Recorremos la lista y borramos los nodos sobre la marcha de forma segura.
+    auto it = laboratorios.iteradorInicio();
+    while (it.haySiguiente()) {
+        bool debe_eliminarse = false;
+        // Comprobamos si el laboratorio actual está en la lista de eliminación
+        for (unsigned int i = 0; i < labs_a_eliminar.tamlog(); ++i) {
+            if (it.dato() == labs_a_eliminar[i]) {
+                debe_eliminarse = true;
+                break;
+            }
+        }
+
+        if (debe_eliminarse) {
+            // 1. Guardamos el puntero al objeto Laboratorio para borrarlo después
+            Laboratorio* ptr_a_borrar = it.dato();
+
+            // 2. Guardamos la posición del siguiente nodo ANTES de borrar el actual
+            auto it_siguiente = it;
+            it_siguiente.siguiente();
+
+            // 3. Borramos el nodo de la lista usando tu método
+            laboratorios.borrar(it);
+
+            // 4. Liberamos la memoria del objeto Laboratorio en sí
+            delete ptr_a_borrar;
+
+            // 5. Movemos nuestro iterador a la posición que guardamos
+            it = it_siguiente;
+        } else {
+            // Si no borramos, simplemente avanzamos
+            it.siguiente();
+        }
+    }
+
+    return labs_a_eliminar.tamlog();
 }
 
 #endif //MEDIEXPRESS_H

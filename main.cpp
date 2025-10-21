@@ -15,10 +15,7 @@
      @author Jose María Torraleja Franco jmtf0002@red.ujaen.es */
 
 
-#include <vector> // Necesario para std::vector
-#include <vector> // Necesario para std::vector
-#include <string>   // Necesario para std::string
-#include <sstream>  // Necesario para std::stringstream
+
 
 std::vector<std::string> parsearFilaCSV(const std::string& linea) {
     std::vector<std::string> campos;
@@ -248,10 +245,28 @@ int main(int argc, const char * argv[]) {
     std::cout << "   - Medicamentos sin laboratorio (despues): " << sistema.contarMedicamentosSinLab() << std::endl;
 
     if (sistema.contarMedicamentosSinLab() == 0) {
-        std::cout << "\n>> ✅ Proceso de reasignacion completado con exito." << std::endl;
-    } else {
-        std::cout << "\n>> ❌ ATENCION: Aun quedan medicamentos sin asignar." << std::endl;
+        std::cout << "\n>>  Proceso de reasignacion completado con exito." << std::endl;
     }
 
-    return 0; // Al salir de
-}
+    std::cout << "------------------------------------------" << std::endl;
+    std::cout << "Iniciando eliminacion de laboratorios..." << std::endl;
+
+    int laboratorios_totales_antes = sistema.totalLaboratorios();
+    int medicamentos_sin_lab_antes = sistema.contarMedicamentosSinLab();
+
+    std::cout << " - Laboratorios totales (antes): " << laboratorios_totales_antes << std::endl;
+    std::cout << " - Medicamentos sin laboratorio (antes): " << medicamentos_sin_lab_antes << std::endl;
+
+    // Llamada a la nueva función
+    int eliminados = sistema.eliminarLabsPorCiudad("Bruselas");
+
+    std::cout << "\n>> Se han eliminado " << eliminados << " laboratorios de Bruselas." << std::endl;
+
+    int laboratorios_totales_despues = sistema.totalLaboratorios();
+    int medicamentos_sin_lab_despues = sistema.contarMedicamentosSinLab();
+
+    std::cout << " - Laboratorios totales (despues): " << laboratorios_totales_despues << std::endl;
+    std::cout << " - Medicamentos sin laboratorio (despues): " << medicamentos_sin_lab_despues << std::endl;
+    std::cout << "------------------------------------------" << std::endl;
+
+    return 0;}
