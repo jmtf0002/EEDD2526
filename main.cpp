@@ -65,7 +65,6 @@ void imprimirLaboratorios(const ListaEnlazada<Laboratorio*>& lista, int limite =
     while (it.haySiguiente()) {
         if (limite != -1 && contador >= limite) break;
 
-        // it.dato() devuelve un Laboratorio*, por lo que usamos ->
         Laboratorio* lab_ptr = it.dato();
         std::cout << "   - ID: " << lab_ptr->getId()
                   << ", Nombre: " << lab_ptr->getNombreLaboratorio()
@@ -202,7 +201,7 @@ int main(int argc, const char * argv[]) {
     }
 
 
-  // El constructor carga y enlaza todo automáticamente usando punteros
+  // El constructor carga y enlaza
     MediExpress sistema("data/pa_medicamentos.csv", "data/laboratorios.csv");
     std::cout << "------------------------------------------" << std::endl;
     std::cout << "Sistema inicializado. Realizando consultas..." << std::endl;
@@ -229,7 +228,7 @@ int main(int argc, const char * argv[]) {
     std::cout << "\n------------------------------------------\n" << std::endl;
 
 
-    // 4. Laboratorios que suministran "ACEITES" (sin duplicados)
+    // 4. Laboratorios que suministran "ACEITES"
     std::cout << "4. Laboratorios que suministran productos 'ACEITES':" << std::endl;
     ListaEnlazada<Laboratorio*> labs_aceites = sistema.buscarLabsPorCompuesto("ACEITE");
     imprimirLaboratorios(labs_aceites);
@@ -257,7 +256,7 @@ int main(int argc, const char * argv[]) {
     std::cout << " - Laboratorios totales (antes): " << laboratorios_totales_antes << std::endl;
     std::cout << " - Medicamentos sin laboratorio (antes): " << medicamentos_sin_lab_antes << std::endl;
 
-    // Llamada a la nueva función
+    // Eliminar laboratorios de Bruselas
     int eliminados = sistema.eliminarLabsPorCiudad("Bruselas");
 
     std::cout << "\n>> Se han eliminado " << eliminados << " laboratorios de Bruselas." << std::endl;

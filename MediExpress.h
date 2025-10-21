@@ -11,41 +11,29 @@
 #include "PaMedicamento.h"
 #include "Laboratorio.h"
 
-// Asumimos que la función parsearFilaCSV está definida aquí o en un archivo auxiliar
 std::vector<std::string> parsearFilaCSV(const std::string& linea);
 
 class MediExpress {
 private:
-    // Almacenamos punteros a los objetos, no los objetos mismos
     VDinamico<PaMedicamento*> principiosActivos;
     ListaEnlazada<Laboratorio*> laboratorios;
 
 public:
-    // --- Constructor y Destructor ---
     MediExpress(const std::string& archivo_meds, const std::string& archivo_labs);
     ~MediExpress();
-
-    // --- Métodos de Consulta (ahora devuelven colecciones de punteros) ---
     VDinamico<PaMedicamento*> buscarCompuesto(const std::string& nombre) const;
     ListaEnlazada<Laboratorio*> buscarLabCiudad(const std::string& ciudad) const;
     ListaEnlazada<Laboratorio*> buscarLabsPorCompuesto(const std::string& compuesto) const;
-
     void imprimirMedicamentosPorLaboratorio(int idLab) const;
-
-    // --- Métodos de Operación ---
     void asignarMedsSinLabAMadrid();
-
-    // --- Métodos de Verificación ---
     unsigned int totalMedicamentos() const { return principiosActivos.tamlog(); }
     int totalLaboratorios() const { return laboratorios.tam(); }
     int contarMedicamentosSinLab() const;
-
     int eliminarLabsPorCiudad(const std::string& ciudad);
 };
 
-// --- Implementación del Constructor (adaptado para punteros) ---
 MediExpress::MediExpress(const std::string& archivo_meds, const std::string& archivo_labs) {
-    // PASO 1: Leer medicamentos y crear objetos con 'new'
+    //  Leer medicamentos
     std::ifstream is_meds(archivo_meds);
     if (is_meds.is_open()) {
         std::string fila;
@@ -64,7 +52,7 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
         is_meds.close();
     }
 
-    // PASO 2: Leer laboratorios y crear objetos con 'new'
+    //  Leer laboratorios
     std::ifstream is_labs(archivo_labs);
     if (is_labs.is_open()) {
         std::string fila;
@@ -82,7 +70,7 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
         is_labs.close();
     }
 
-    // PASO 3: Enlazar (ahora trabajamos directamente con los punteros almacenados)
+    //  Enlazar
     auto it_lab = laboratorios.iteradorInicio();
     if (it_lab.haySiguiente()) {
         for (unsigned int i = 0; i < principiosActivos.tamlog(); ++i) {
@@ -95,14 +83,11 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
     }
 }
 
-// --- Destructor: Imprescindible para liberar la memoria creada con 'new' ---
 MediExpress::~MediExpress() {
-    // Liberar memoria de los medicamentos
     for (unsigned int i = 0; i < principiosActivos.tamlog(); ++i) {
         delete principiosActivos[i];
     }
 
-    // Liberar memoria de los laboratorios
     auto it = laboratorios.iteradorInicio();
     while (it.haySiguiente()) {
         delete it.dato();
@@ -111,7 +96,6 @@ MediExpress::~MediExpress() {
 }
 
 
-// --- Implementación de los Métodos (adaptados para punteros) ---
 
 int MediExpress::contarMedicamentosSinLab() const {
     int contador = 0;
@@ -128,7 +112,7 @@ ListaEnlazada<Laboratorio*> MediExpress::buscarLabCiudad(const std::string& ciud
     auto it = laboratorios.iteradorInicio();
     while (it.haySiguiente()) {
         if (it.dato()->getLocalidad().find(ciudad) != std::string::npos) {
-            resultados.insertarFinal(it.dato()); // it.dato() ya es un puntero
+            resultados.insertarFinal(it.dato());
         }
         it.siguiente();
     }
@@ -203,18 +187,14 @@ void MediExpress::asignarMedsSinLabAMadrid() {
         asignaciones++;
         it_lab.siguiente();
     }
-    // No es necesario buscar el medicamento original, porque ya estamos trabajando con punteros a ellos.
 }
 
-// --- Implementación del método de eliminación (CORREGIDO) ---
 
-// --- Implementación del método de eliminación (ADAPTADO A TU 'borrar') ---
 
 int MediExpress::eliminarLabsPorCiudad(const std::string& ciudad) {
     VDinamico<Laboratorio*> labs_a_eliminar;
 
-    // Paso 1: Identificar los punteros de los laboratorios que se van a eliminar.
-    // Esta parte no cambia.
+    //Buscar laboratorios a eliminar
     auto it_lab = laboratorios.iteradorInicio();
     while (it_lab.haySiguiente()) {
         if (it_lab.dato()->getLocalidad().find(ciudad) != std::string::npos) {
@@ -224,10 +204,10 @@ int MediExpress::eliminarLabsPorCiudad(const std::string& ciudad) {
     }
 
     if (labs_a_eliminar.tamlog() == 0) {
-        return 0; // No hay laboratorios en esa ciudad para eliminar.
+        return 0;
     }
 
-    // Paso 2: Desvincular los medicamentos. Esta parte no cambia.
+    //Desvincular medicamentos
     for (unsigned int i = 0; i < principiosActivos.tamlog(); ++i) {
         Laboratorio* lab_asignado = principiosActivos[i]->getLaboratorio();
         if (lab_asignado) {
@@ -240,8 +220,8 @@ int MediExpress::eliminarLabsPorCiudad(const std::string& ciudad) {
         }
     }
 
-    // --- PASO 3 CORREGIDO ---
-    // Recorremos la lista y borramos los nodos sobre la marcha de forma segura.
+
+    // Borramos el laboratorio
     auto it = laboratorios.iteradorInicio();
     while (it.haySiguiente()) {
         bool debe_eliminarse = false;
@@ -254,23 +234,17 @@ int MediExpress::eliminarLabsPorCiudad(const std::string& ciudad) {
         }
 
         if (debe_eliminarse) {
-            // 1. Guardamos el puntero al objeto Laboratorio para borrarlo después
             Laboratorio* ptr_a_borrar = it.dato();
 
-            // 2. Guardamos la posición del siguiente nodo ANTES de borrar el actual
             auto it_siguiente = it;
             it_siguiente.siguiente();
 
-            // 3. Borramos el nodo de la lista usando tu método
             laboratorios.borrar(it);
 
-            // 4. Liberamos la memoria del objeto Laboratorio en sí
             delete ptr_a_borrar;
 
-            // 5. Movemos nuestro iterador a la posición que guardamos
             it = it_siguiente;
         } else {
-            // Si no borramos, simplemente avanzamos
             it.siguiente();
         }
     }
