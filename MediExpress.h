@@ -19,7 +19,7 @@ private:
     ListaEnlazada<Laboratorio*> laboratorios;
 
 public:
-    MediExpress(const std::string& archivo_meds, const std::string& archivo_labs);
+    MediExpress(const std::string& archivo_meds, const std::string& archivo_labs, const std::string& archivo_farma);
     ~MediExpress();
     VDinamico<PaMedicamento*> buscarCompuesto(const std::string& nombre) const;
     ListaEnlazada<Laboratorio*> buscarLabCiudad(const std::string& ciudad) const;
@@ -32,7 +32,7 @@ public:
     int eliminarLabsPorCiudad(const std::string& ciudad);
 };
 
-MediExpress::MediExpress(const std::string& archivo_meds, const std::string& archivo_labs) {
+MediExpress::MediExpress(const std::string& archivo_meds, const std::string& archivo_labs, const std::string& archivo_farma) {
     //  Leer medicamentos
     std::ifstream is_meds(archivo_meds);
     if (is_meds.is_open()) {
