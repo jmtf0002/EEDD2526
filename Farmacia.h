@@ -2,67 +2,131 @@
 #define FARMACIA_H
 
 #include <string>
-#include "PaMedicamento.h"
-using namespace std;
+#include <iostream>
+#include "VDinamico.h"      // Para el stock
+#include "PaMedicamento.h"  // Para el stock
+
+// --- Declaración Adelantada ---
+// Es IMPRESCINDIBLE para que el compilador sepa qué es "MediExpress*"
+class MediExpress; 
 
 class Farmacia {
 private:
-    string cif;
-    string provincia;
-    string localidad;
-    string nombre;
-    string direccion;
-    string codPostal;
+    std::string cif;
+    std::string provincia;
+    std::string localidad;
+    std::string nombre;
+    std::string direccion;
+    std::string codPostal;
+
+    // --- RELACIONES (Atributos UML) ---
+
+    // Puntero a la central de MediExpress (relación 'linkMedi')
+    // Necesita la declaración adelantada "class MediExpress;"
+    MediExpress* linkMedi;
+    
+    // Stock de medicamentos de la farmacia (relación 'dispense')
+    // Asumimos que guardas punteros a los medicamentos que te da MediExpress
+    VDinamico<PaMedicamento*> stock;
 
 public:
     // --- Constructores ---
-    Farmacia() = default;
 
-    Farmacia(string cif, string provincia, string localidad,
-             string nombre, string direccion, string codPostal)
+    // Constructor por defecto (Obligatorio para el AVL)
+    Farmacia() : linkMedi(nullptr) {}
+
+    // Constructor completo (7 argumentos)
+    Farmacia(std::string cif, std::string provincia, std::string localidad,
+             std::string nombre, std::string direccion, std::string codPostal,
+             MediExpress* me) // "me" es el puntero a MediExpress
         : cif(cif), provincia(provincia), localidad(localidad),
-          nombre(nombre), direccion(direccion), codPostal(codPostal) {}
+          nombre(nombre), direccion(direccion), codPostal(codPostal), 
+          linkMedi(me) {
+        // 'stock' se inicializa vacío automáticamente
+    }
 
     // --- Getters ---
-    string getCif() const { return cif; }
-    string getProvincia() const { return provincia; }
-    string getLocalidad() const { return localidad; }
-    string getNombre() const { return nombre; }
-    string getDireccion() const { return direccion; }
-    string getCodPostal() const { return codPostal; }
+    std::string getCif() const { return cif; }
+    std::string getProvincia() const { return provincia; }
+    std::string getLocalidad() const { return localidad; }
+    std::string getNombre() const { return nombre; }
+    std::string getDireccion() const { return direccion; }
+    std::string getCodPostal() const { return codPostal; }
 
     // --- Setters ---
-    void setCif(const string& c) { cif = c; }
-    void setProvincia(const string& p) { provincia = p; }
-    void setLocalidad(const string& l) { localidad = l; }
-    void setNombre(const string& n) { nombre = n; }
-    void setDireccion(const string& d) { direccion = d; }
-    void setCodPostal(const string& cp) { codPostal = cp; }
+    // Necesario para poder buscar en el AVL
+    void setCif(const std::string& c) { cif = c; }
+    void setProvincia(const std::string& p) { provincia = p; }
+    void setLocalidad(const std::string& l) { localidad = l; }
+    void setNombre(const std::string& n) { nombre = n; }
+    void setDireccion(const std::string& d) { direccion = d; }
+    void setCodPostal(const std::string& cp) { codPostal = cp; }
 
-    // --- Métodos funcionales ---
-    // Simula un pedido de medicamento (por id)
-    void pedidoMedicam(int id_num) {
-        // Aquí se podría implementar la lógica para registrar o enviar un pedido
-        cout << "Pedido de medicamento con ID " << id_num
-             << " realizado por la farmacia " << nombre << "." << endl;
+
+    // --- Operadores (Obligatorios para el AVL<Farmacia>) ---
+    // El AVL necesita saber cómo comparar Farmacias (lo hacemos por CIF)
+
+    /**
+       * @brief Operador "menor que".
+       * Necesario para que el AVL decida si ir a la izquierda.
+       * Es crucial que sea 'const' al final.
+       */
+    bool operator<(const Farmacia& other) const {
+        return this->cif < other.cif;
     }
 
-    // Busca un medicamento según su ID (retorna un objeto PaMedicamento)
-    PaMedicamento buscaMedicam(int id_num) {
-        // Lógica simulada: en un sistema real buscaría en una base de datos o lista
-        cout << "Buscando medicamento con ID " << id_num
-             << " en la farmacia " << nombre << "." << endl;
-
-        // Retorna un medicamento de ejemplo
-        return PaMedicamento(id_num, "ALPHA" + to_string(id_num), "MedicamentoEjemplo");
+    /**
+     * @brief Operador "mayor que".
+     * Necesario para que el AVL decida si ir a la derecha.
+     * Es crucial que sea 'const' al final.
+     */
+    bool operator>(const Farmacia& other) const {
+        return this->cif > other.cif;
     }
 
-    // Dispensa un medicamento (lo entrega al cliente)
-    void dispensaMedicam(const PaMedicamento& pa) {
-        cout << "La farmacia " << nombre
-             << " dispensa el medicamento: " << pa.get_nombre()<< "." << endl;
+    /**
+     * @brief Operador "igual que".
+     * Necesario para la búsqueda (buscaRec) y para que el AVL
+     * sepa si un elemento ya existe.
+     */
+    bool operator==(const Farmacia& other) const {
+        return this->cif == other.cif;
+    }
+
+    // --- MÉTODOS FUNCIONALES (Según UML) ---
+
+    /**
+     * @brief Busca un medicamento en el stock local por ID.
+     * @return Puntero al medicamento si se encuentra, nullptr si no.
+     */
+    PaMedicamento* buscaMedicam(int id_num) {
+        for (unsigned i = 0; i < stock.tamlog(); ++i) {
+            // Asumimos que PaMedicamento tiene un getter para su ID
+            if (stock[i]->get_id_num() == id_num) { 
+                std::cout << "Farmacia " << nombre << ": Med " << id_num << " encontrado en stock." << std::endl;
+                return stock[i];
+            }
+        }
+        std::cout << "Farmacia " << nombre << ": Med " << id_num << " NO encontrado en stock." << std::endl;
+        return nullptr;
+    }
+
+    /**
+     * @brief Pide un medicamento a MediExpress.
+     * Llama a MediExpress a través del puntero 'linkMedi'.
+     */
+    void pedidoMedicam(int id_num); // Definición en el .cpp
+
+    /**
+     * @brief Añade un medicamento al stock. (Llamado por MediExpress)
+     */
+    void dispensaMedicam(PaMedicamento* pa) {
+        if (pa) {
+            std::cout << "Farmacia " << nombre << ": Recibido " << pa->get_nombre() << " en el stock." << std::endl;
+            // Añadimos el puntero al final del vector de stock
+            stock.insertar(pa, stock.tamlog()); 
+        }
     }
 };
 
 #endif // FARMACIA_H
-
