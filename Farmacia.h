@@ -95,6 +95,14 @@ public:
 
     // --- MÉTODOS FUNCIONALES (Según UML) ---
 
+    // En Farmacia.h (dentro de la sección public:)
+
+    /**
+     * @brief Localiza medicamentos en el stock local por nombre (parcial).
+     * @param nombre Búsqueda parcial por cadena (case-sensitive).
+     * @return Un vector de punteros a los medicamentos encontrados en el stock.
+     */
+    VDinamico<PaMedicamento*> localizarMedicamentosPorNombre(const std::string& nombre) const;
     /**
      * @brief Busca un medicamento en el stock local por ID.
      * @return Puntero al medicamento si se encuentra, nullptr si no.
@@ -102,12 +110,12 @@ public:
     PaMedicamento* buscaMedicam(int id_num) {
         for (unsigned i = 0; i < stock.tamlog(); ++i) {
             // Asumimos que PaMedicamento tiene un getter para su ID
-            if (stock[i]->get_id_num() == id_num) { 
-                std::cout << "Farmacia " << nombre << ": Med " << id_num << " encontrado en stock." << std::endl;
+            if (stock[i]->get_id_num() == id_num) {
+          //      std::cout << "Farmacia " << nombre << ": Med " << id_num << " encontrado en stock." << std::endl;
                 return stock[i];
             }
         }
-        std::cout << "Farmacia " << nombre << ": Med " << id_num << " NO encontrado en stock." << std::endl;
+     //   std::cout << "Farmacia " << nombre << ": Med " << id_num << " NO encontrado en stock." << std::endl;
         return nullptr;
     }
 
@@ -115,16 +123,22 @@ public:
      * @brief Pide un medicamento a MediExpress.
      * Llama a MediExpress a través del puntero 'linkMedi'.
      */
-    void pedidoMedicam(int id_num); // Definición en el .cpp
+    void pedidoMedicam(int id_num);
 
     /**
      * @brief Añade un medicamento al stock. (Llamado por MediExpress)
      */
     void dispensaMedicam(PaMedicamento* pa) {
         if (pa) {
-            std::cout << "Farmacia " << nombre << ": Recibido " << pa->get_nombre() << " en el stock." << std::endl;
-            // Añadimos el puntero al final del vector de stock
-            stock.insertar(pa, stock.tamlog()); 
+
+            // --- AÑADE ESTE IF DE DEBUG ---
+            if (pa->get_id_num() == 3640) {
+                std::cout << "DEBUG: La farmacia " << nombre
+                          << " acaba de recibir el OXIDO DE MAGNESIO (ID 3640)." << std::endl;
+            }
+
+            // Esta es la línea que HACE la asignación
+            stock.insertar(pa, stock.tamlog());
         }
     }
 };

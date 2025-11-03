@@ -9,7 +9,7 @@
 					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
 					"minimumCMakeVersion" : 
 					{
-						"string" : "3.29"
+						"string" : "3.20"
 					},
 					"projectIndex" : 0,
 					"source" : ".",
@@ -27,7 +27,7 @@
 					[
 						0
 					],
-					"name" : "pt1b",
+					"name" : "EEDD2526",
 					"targetIndexes" : 
 					[
 						0
@@ -39,7 +39,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "EEDD2526::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-EEDD2526-Debug-59448b64175ac369c4e6.json",
+					"jsonFile" : "target-EEDD2526-Debug-914333edab62fe5a2565.json",
 					"name" : "EEDD2526",
 					"projectIndex" : 0
 				}
@@ -49,12 +49,12 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "C:/Users/UJA/CLionProjects/EEDD2526/cmake-build-debug",
-		"source" : "C:/Users/UJA/CLionProjects/EEDD2526"
+		"build" : "C:/Users/Josema/CLionProjects/EEDD2526/cmake-build-debug",
+		"source" : "C:/Users/Josema/CLionProjects/EEDD2526"
 	},
 	"version" : 
 	{
 		"major" : 2,
-		"minor" : 8
+		"minor" : 7
 	}
 }
