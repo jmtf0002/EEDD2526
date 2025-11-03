@@ -179,24 +179,16 @@ int main() {
 
 
     // --- Tarea 9: Recorrer Inorden y mostrar 100 primeras ---
-    std::cout << "\n--- Tarea 9: Recorrido Inorden (100 primeras farmacias) ---" << std::endl;
+    std::cout << "\n Recorrido Inorden (CIFs farmacias) ---" << std::endl;
+    std::cout << "====================================" << std::endl;
 
-    // ANTES:
-    // VDinamico<Farmacia> farmacias_inorden = mediExpress.getInordenAVLFarmacias();
-
-    // AHORA (Línea 130 corregida):
     VDinamico<Farmacia*> farmacias_inorden = mediExpress.getInordenAVLFarmacias();
 
     int limite = (farmacias_inorden.tamlog() < 100) ? farmacias_inorden.tamlog() : 100;
 
     for (int i = 0; i < limite; ++i) {
-        // ANTES:
-        // std::cout << "  " << (i+1) << ". CIF: " << farmacias_inorden[i].getCif()
-        //           << " - Nombre: " << farmacias_inorden[i].getNombre() << std::endl;
 
-        // AHORA (Bucle corregido, usa -> en lugar de .):
-        std::cout << "  " << (i+1) << ". CIF: " << farmacias_inorden[i]->getCif()
-                  << " - Nombre: " << farmacias_inorden[i]->getNombre() << std::endl;
+        std::cout << "  " << (i+1) << ". CIF: " << farmacias_inorden[i]->getCif()<<std::endl;
     }
 
 

@@ -22,7 +22,7 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
             if (campos.size() >= 3) {
                 try {
                     PaMedicamento* p = new PaMedicamento(std::stoi(campos[0]), campos[1], campos[2]);
-                    principiosActivos.insertar(*p, principiosActivos.tamlog());
+                    medication.insertar(*p, medication.tamlog());
                     delete p; // Libera el puntero temporal
                     med_count++;
                 } catch (const std::exception&) {}
@@ -66,21 +66,23 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
         }
         is_labs.close();
     }
-    std::cout << "DEBUG (Paso 2): Carga de laboratorios FINALIZADA. Total: " << lab_count << std::endl;
+    std::cout << "Carga de laboratorios FINALIZADA. Total: " << lab_count << std::endl;
 
     // --- PASO 4: Enlazar medicamentos con laboratorios ---
     std::cout << "Paso 4: Enlazando medicamentos y laboratorios..." << std::endl;
     auto it_lab = laboratorios.iteradorInicio();
     if (it_lab.haySiguiente()) {
-        for (unsigned int i = 0; i < principiosActivos.tamlog(); ++i) {
+        for (unsigned int i = 0; i < medication.tamlog(); ++i) {
             if (!it_lab.haySiguiente()) break;
-            principiosActivos[i].servidoPor(&it_lab.dato());
+            medication[i].servidoPor(&it_lab.dato());
             if (i % 2 == 1) {
                 it_lab.siguiente();
             }
         }
     }
 
+    this->asignarMedsSinLabAMadrid();
+    std::cout << "-> Medicamentos sin laboratorio restantes: " << this->contarMedicamentosSinLab() << std::endl;
     // --- PASO 3: Cargar Farmacias en el AVL ---
     std::cout << "Paso 3: Cargando farmacias en AVL..." << std::endl;
     std::ifstream is_farma(archivo_farma);
@@ -127,7 +129,7 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
     }
 
     // Iteramos y asignamos los medicamentos
-    unsigned int num_medicamentos = principiosActivos.tamlog();
+    unsigned int num_medicamentos = medication.tamlog();
     if (num_medicamentos > 0) {
         for (unsigned int i = 0; i < cifs_farmacias.tamlog(); ++i) {
             Farmacia* farmacia = this->buscarFarmacia(cifs_farmacias[i]);
@@ -136,7 +138,7 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
                 for (int j = 0; j < 100; ++j) {
                     int med_index_ciclico = (med_start_index + j) % num_medicamentos;
                     // Asumimos que PaMedicamento tiene get_id_num()
-                    int id_a_suministrar = principiosActivos[med_index_ciclico].get_id_num();
+                    int id_a_suministrar = medication[med_index_ciclico].get_id_num();
 
                     // Llama a suministrarFarmacia.
                     // Para silenciar el log "Suministrando..." y "Recibido...",
@@ -173,8 +175,8 @@ MediExpress::~MediExpress() {
 
 int MediExpress::contarMedicamentosSinLab() const {
     int contador = 0;
-    for (unsigned int i = 0; i < principiosActivos.tamlog(); ++i) {
-        if (principiosActivos[i].getLaboratorio() == nullptr) {
+    for (unsigned int i = 0; i < medication.tamlog(); ++i) {
+        if (medication[i].getLaboratorio() == nullptr) {
             contador++;
         }
     }
@@ -195,9 +197,9 @@ ListaEnlazada<Laboratorio*> MediExpress::buscarLabCiudad(const std::string& ciud
 
     VDinamico<PaMedicamento*> MediExpress::buscarCompuesto(const std::string& nombre) {
         VDinamico<PaMedicamento*> resultados;
-        for (unsigned int i = 0; i < principiosActivos.tamlog(); ++i) {
-            if (principiosActivos[i].get_nombre().find(nombre) != std::string::npos) {
-                    resultados.insertar(&principiosActivos[i], resultados.tamlog());            }
+        for (unsigned int i = 0; i < medication.tamlog(); ++i) {
+            if (medication[i].get_nombre().find(nombre) != std::string::npos) {
+                    resultados.insertar(&medication[i], resultados.tamlog());            }
         }
         return resultados;
     }
@@ -229,10 +231,10 @@ ListaEnlazada<Laboratorio*> MediExpress::buscarLabsPorCompuesto(const std::strin
 void MediExpress::imprimirMedicamentosPorLaboratorio(int idLab) const {
     std::cout << "   Medicamentos suministrados por el laboratorio con ID " << idLab << ":" << std::endl;
     bool encontrado = false;
-    for (unsigned int i = 0; i < principiosActivos.tamlog(); ++i) {
-        Laboratorio* lab = principiosActivos[i].getLaboratorio();
+    for (unsigned int i = 0; i < medication.tamlog(); ++i) {
+        Laboratorio* lab = medication[i].getLaboratorio();
         if (lab && lab->getId() == idLab) {
-            std::cout << "    -> " << principiosActivos[i].get_nombre() << std::endl;
+            std::cout << "    -> " << medication[i].get_nombre() << std::endl;
             encontrado = true;
         }
     }
@@ -243,9 +245,9 @@ void MediExpress::imprimirMedicamentosPorLaboratorio(int idLab) const {
 
 void MediExpress::asignarMedsSinLabAMadrid() {
     VDinamico<PaMedicamento*> meds_sin_lab;
-    for (unsigned int i = 0; i < principiosActivos.tamlog(); ++i) {
-        if (principiosActivos[i].getLaboratorio() == nullptr) {
-            meds_sin_lab.insertar(&principiosActivos[i], meds_sin_lab.tamlog());
+    for (unsigned int i = 0; i < medication.tamlog(); ++i) {
+        if (medication[i].getLaboratorio() == nullptr) {
+            meds_sin_lab.insertar(&medication[i], meds_sin_lab.tamlog());
         }
     }
 
@@ -281,12 +283,12 @@ int MediExpress::eliminarLabsPorCiudad(const std::string& ciudad) {
     }
 
     //Desvincular medicamentos
-    for (unsigned int i = 0; i < principiosActivos.tamlog(); ++i) {
-        Laboratorio* lab_asignado = principiosActivos[i].getLaboratorio();
+    for (unsigned int i = 0; i < medication.tamlog(); ++i) {
+        Laboratorio* lab_asignado = medication[i].getLaboratorio();
         if (lab_asignado) {
             for (unsigned int j = 0; j < labs_a_eliminar.tamlog(); ++j) {
                 if (lab_asignado == labs_a_eliminar[j]) {
-                    principiosActivos[i].servidoPor(nullptr);
+                    medication[i].servidoPor(nullptr);
                     break;
                 }
             }
@@ -335,11 +337,11 @@ int MediExpress::eliminarLabsPorCiudad(const std::string& ciudad) {
  * @warning (No es 'const' porque devuelve un puntero no-const a un miembro interno).
  */
 PaMedicamento* MediExpress::buscarCompuesto(int id_num) {
-    for (unsigned int i = 0; i < principiosActivos.tamlog(); ++i) {
+    for (unsigned int i = 0; i < medication.tamlog(); ++i) {
         // Asumimos que PaMedicamento tiene un método get_id_num()
-        if (principiosActivos[i].get_id_num() == id_num) {
+        if (medication[i].get_id_num() == id_num) {
             // Devuelve la dirección del objeto que está DENTRO del vector
-            return &principiosActivos[i]; 
+            return &medication[i];
         }
     }
     return nullptr;
@@ -401,3 +403,16 @@ ListaEnlazada<Laboratorio*> MediExpress::buscarLabs(const std::string& nombrePA)
     return this->buscarLabsPorCompuesto(nombrePA);
 }
 
+/**
+ * @brief Devuelve la altura del árbol AVL de farmacias.
+ */
+unsigned int MediExpress::getAlturaAVLFarmacias() {
+    return farmacias.altura();
+}
+
+/**
+ * @brief Devuelve un VDinamico con el recorrido inorden del AVL de farmacias.
+ */
+VDinamico<Farmacia*> MediExpress::getInordenAVLFarmacias() {
+    return farmacias.recorreInorden();
+}
