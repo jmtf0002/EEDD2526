@@ -1,41 +1,65 @@
 #include "Farmacia.h"
-#include "MediExpress.h"  // <-- Necesario para llamar a suministrarFarmacia
-#include <iostream>       // Para el std::cout
+#include "MediExpress.h"  // Necesario para la definición completa de MediExpress
+#include "PaMedicamento.h" // Necesario para get_id_num() y get_nombre()
+
+// --- Constructor por defecto ---
+// (Si es simple, se puede quedar en el .h, pero por coherencia lo pongo aquí)
+Farmacia::Farmacia() : linkMedi(nullptr) {}
+
+// --- Constructor completo (7 argumentos) ---
+Farmacia::Farmacia(std::string cif, std::string provincia, std::string localidad,
+                   std::string nombre, std::string direccion, std::string codPostal,
+                   MediExpress* me)
+    : cif(cif), provincia(provincia), localidad(localidad),
+      nombre(nombre), direccion(direccion), codPostal(codPostal),
+      linkMedi(me) {
+    // 'stock' (VDinamico) se inicializa vacío automáticamente
+}
 
 /**
- * @brief Realiza un pedido de un medicamento a MediExpress.
- * Este método utiliza el puntero 'linkMedi' para llamar al método
- * 'suministrarFarmacia' de la central de MediExpress.
- * @param id_num El ID numérico del medicamento a pedir.
+ * @brief Busca un medicamento en el stock local por ID.
+ */
+PaMedicamento* Farmacia::buscaMedicam(int id_num) {
+    for (unsigned i = 0; i < stock.tamlog(); ++i) {
+        if (stock[i]->get_id_num() == id_num) {
+            return stock[i];
+        }
+    }
+    return nullptr;
+}
+
+/**
+ * @brief Añade un medicamento al stock. (Llamado por MediExpress)
+ */
+void Farmacia::dispensaMedicam(PaMedicamento* pa) {
+    if (pa) {
+
+        stock.insertar(pa, stock.tamlog());
+    }
+}
+
+/**
+ * @brief Pide un medicamento a MediExpress.
  */
 void Farmacia::pedidoMedicam(int id_num) {
-    
-    // 1. Comprobación de seguridad (Guard Clause)
-    // Nos aseguramos de que la farmacia esté conectada a la central.
     if (linkMedi == nullptr) {
-        std::cout << "ERROR: Farmacia " << nombre 
+        std::cerr << "ERROR: Farmacia " << nombre
                   << " no esta conectada a MediExpress. Pedido cancelado." << std::endl;
         return;
     }
 
-    // 2. Mensaje de log (opcional, pero útil)
-  //  std::cout << "Farmacia " << nombre << ": Realizando pedido a MediExpress del med ID: "
-  //            << id_num << "." << std::endl;
 
-    // 3. La llamada a MediExpress
-    // Se pasa "*this" para que MediExpress sepa a QUÉ farmacia
-    // debe entregarle el medicamento.
     linkMedi->suministrarFarmacia(*this, id_num);
 }
 
 /**
  * @brief Localiza medicamentos en el stock local por nombre (parcial).
+ * (Este era el método que faltaba para la "Prueba de Parejas")
  */
 VDinamico<PaMedicamento*> Farmacia::localizarMedicamentosPorNombre(const std::string& nombre) const {
     VDinamico<PaMedicamento*> encontrados;
     for (unsigned int i = 0; i < stock.tamlog(); ++i) {
         // Asume que PaMedicamento tiene get_nombre()
-        // std::string::npos significa "no encontrado"
         if (stock[i]->get_nombre().find(nombre) != std::string::npos) {
             encontrados.insertar(stock[i], encontrados.tamlog());
         }
