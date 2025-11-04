@@ -5,7 +5,6 @@
 #include <vector>
 #include <chrono> // Para medir el tiempo
 
-// --- Clases de la Práctica ---
 #include "MediExpress.h"
 #include "Farmacia.h"
 #include "VDinamico.h"
@@ -77,7 +76,7 @@ Farmacia* buscarEnVDinamico(VDinamico<Farmacia>& v, const std::string& cif) {
 
 
 
-/**  @author
+/**  @author  Javier Martínez González jmg00144@red.ujaen.es
       @author José María Torraleja Franco jmtf0002@red.ujaen.es
       */
 
@@ -114,7 +113,7 @@ int main() {
         return 1;
     }
 
-    // Leer los 500 primeros CIFs ---
+    // Leer los 500 primeros CIFs
     VDinamico<std::string> cif_a_buscar;
     std::ifstream is_farma_cif(archivo_farma);
     int contador_cif = 0;
@@ -180,7 +179,7 @@ int main() {
 
     // Programa de prueba 2
 
-    // Crear vector buffer con CIFs ---
+    // Crear vector buffer con CIFs
     std::vector<std::string> cif_buffer = {
         "37656422V", "46316032N", "77092934Q", "33961602D", "B62351861", "B62351861",
         "B65828113", "46138599R", "35069965W", "37579913Y", "37682300C",
@@ -228,7 +227,7 @@ int main() {
     std::cout << std::endl;
 
 
-    // Buscar y contar laboratorios que trabajen con "MAGNESIO" ---
+    // Buscar y contar laboratorios que trabajen con "MAGNESIO"
     std::cout << "Buscar y contar laboratorios que trabajen con MAGNESIO" << std::endl;
     std::cout << "=================================================" << std::endl;
     ListaEnlazada<Laboratorio*> labs_magnesio = mediExpress.buscarLabsPorCompuesto("MAGNESIO");

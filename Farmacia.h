@@ -6,7 +6,6 @@
 #include "VDinamico.h"
 #include "PaMedicamento.h"
 
-// --- Declaración Adelantada ---
 class MediExpress;
 
 class Farmacia {

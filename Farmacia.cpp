@@ -3,7 +3,6 @@
 #include "PaMedicamento.h" // Necesario para get_id_num() y get_nombre()
 #include <iostream>       // Para el std::cout
 
-// --- IMPLEMENTACIÓN Constructores ---
 Farmacia::Farmacia() : linkMedi(nullptr) {}
 
 Farmacia::Farmacia(std::string cif, std::string provincia, std::string localidad,
