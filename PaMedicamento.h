@@ -13,13 +13,11 @@ private:
     Laboratorio *laboratorioAsignado;
 
 public:
-    // Constructores
     PaMedicamento() : id_num(0), id_alpha(""), nombre(""), laboratorioAsignado(nullptr) {}
 
     PaMedicamento(int id_num, const std::string &id_alpha, const std::string &nombre)
         : id_num(id_num), id_alpha(id_alpha), nombre(nombre), laboratorioAsignado(nullptr) {}
 
-    // --- Getters y Setters (Getters ahora son const) ---
     int get_id_num() const {
         return id_num;
     }
@@ -41,7 +39,6 @@ public:
         this->nombre = nombre;
     }
 
-    // --- Funciones de Laboratorio (getter es const) ---
     void servidoPor(Laboratorio *lab) {
         this->laboratorioAsignado = lab;
     }
@@ -49,7 +46,6 @@ public:
         return laboratorioAsignado;
     }
 
-    // --- Comparadores (ahora son const) ---
     bool operator<(const PaMedicamento &med) const {
         return id_num < med.get_id_num();
     }

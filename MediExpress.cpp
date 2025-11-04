@@ -5,9 +5,8 @@
 
 
 MediExpress::MediExpress(const std::string& archivo_meds, const std::string& archivo_labs, const std::string& archivo_farma) {
-    std::cout << "--- Constructor MediExpress: Iniciando Carga ---" << std::endl;
+    std::cout << "=== Constructor MediExpress: Iniciando Carga ===" << std::endl;
 
-    // --- PASO 1: Leer medicamentos ---
     std::cout << "Paso 1: Cargando medicamentos..." << std::endl;
     std::ifstream is_meds(archivo_meds);
     int med_count = 0;
@@ -23,26 +22,25 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
                 try {
                     PaMedicamento* p = new PaMedicamento(std::stoi(campos[0]), campos[1], campos[2]);
                     medication.insertar(*p, medication.tamlog());
-                    delete p; // Libera el puntero temporal
+                    delete p;
                     med_count++;
                 } catch (const std::exception&) {}
             }
         }
         is_meds.close();
     }
-    std::cout << "-> " << med_count << " medicamentos cargados." << std::endl;
+    std::cout << med_count << " medicamentos cargados." << std::endl;
 
-    // --- PASO 2: Leer laboratorios ---
-    std::cout << "DEBUG (Paso 2): Iniciando carga de laboratorios (" << archivo_labs << ")..." << std::endl;
+    std::cout << "Paso 2: Iniciando carga de laboratorios..." << std::endl;
     std::ifstream is_labs(archivo_labs);
     int lab_count = 0;
-    int num_linea = 0; // <-- AÑADIDO: Contador de líneas
+    int num_linea = 0;
     if (is_labs.is_open()) {
         std::string fila;
         while (std::getline(is_labs, fila)) {
-            num_linea++; // <-- AÑADIDO: Incrementa en CADA línea
+            num_linea++;
 
-            if (fila.empty()) continue; // Salta líneas vacías
+            if (fila.empty()) continue;
             if (fila.back() == '\r') fila.pop_back();
 
             std::vector<std::string> campos = parsearFilaCSV(fila);
@@ -51,24 +49,21 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
                 try {
                     Laboratorio* l = new Laboratorio(std::stoi(campos[0]), campos[1], campos[2], campos[3], campos[4]);
                     laboratorios.insertarFinal(*l);
-                    delete l; // Libera el puntero temporal
+                    delete l;
                     lab_count++;
                 } catch (const std::exception& e) {
-                    // --- AÑADIDO: Reporta fallos de 'stoi' ---
-                    std::cout << "DEBUG (Paso 2): Linea " << num_linea << " DESCARTADA (Error de conversion, ej. ID no numerico o cabecera)."
+                    std::cout << " Linea " << num_linea << " DESCARTADA (Error de conversion, ej. ID no numerico o cabecera)."
                               << " Contenido: " << fila << std::endl;
                 }
             } else {
-                // --- AÑADIDO: Reporta fallos de conteo de campos ---
-                std::cout << "DEBUG (Paso 2): Linea " << num_linea << " DESCARTADA (Campos esperados: 5, Encontrados: " << campos.size() << ")."
+                std::cout << " Linea " << num_linea << " DESCARTADA (Campos esperados: 5, Encontrados: " << campos.size() << ")."
                           << " Contenido: " << fila << std::endl;
             }
         }
         is_labs.close();
     }
-    std::cout << "Carga de laboratorios FINALIZADA. Total: " << lab_count << std::endl;
+    std::cout  << lab_count << " laboratorios cargados."   << std::endl;
 
-    // --- PASO 4: Enlazar medicamentos con laboratorios ---
     std::cout << "Paso 4: Enlazando medicamentos y laboratorios..." << std::endl;
     auto it_lab = laboratorios.iteradorInicio();
     if (it_lab.haySiguiente()) {
@@ -82,9 +77,7 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
     }
 
     this->asignarMedsSinLabAMadrid();
-    std::cout << "-> Medicamentos sin laboratorio restantes: " << this->contarMedicamentosSinLab() << std::endl;
-    // --- PASO 3: Cargar Farmacias en el AVL ---
-    std::cout << "Paso 3: Cargando farmacias en AVL..." << std::endl;
+    std::cout << "Paso 5: Cargando farmacias en AVL..." << std::endl;
     std::ifstream is_farma(archivo_farma);
     int farma_count = 0;
     if (is_farma.is_open()) {
@@ -98,17 +91,16 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
                 try {
                     Farmacia f(campos[0], campos[1], campos[2],
                                campos[3], campos[4], campos[5], this);
-                    farmacias.insercion(f); // O 'inserta', según tu AVL
+                    farmacias.insercion(f);
                     farma_count++;
                 } catch (const std::exception&) {}
             }
         }
         is_farma.close();
     }
-    std::cout << "-> " << farma_count << " farmacias cargadas." << std::endl;
+    std::cout << farma_count << " farmacias cargadas." << std::endl;
 
-    // --- PASO 5: Cargar CIFs y asignar 100 medicamentos cíclicamente ---
-    std::cout << "Paso 5: Asignando stock inicial ciclico a farmacias..." << std::endl;
+    std::cout << "Paso 6: Asignando stock inicial a farmacias..." << std::endl;
     VDinamico<std::string> cifs_farmacias;
     std::ifstream is_farma_cifs(archivo_farma);
     std::string fila_cif;
@@ -125,10 +117,9 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
         }
         is_farma_cifs.close();
     } else {
-        std::cerr << "ERROR (Paso 5): No se pudo re-abrir " << archivo_farma << std::endl;
+        std::cerr << "Error: No se pudo abrir " << archivo_farma << std::endl;
     }
 
-    // Iteramos y asignamos los medicamentos
     unsigned int num_medicamentos = medication.tamlog();
     if (num_medicamentos > 0) {
         for (unsigned int i = 0; i < cifs_farmacias.tamlog(); ++i) {
@@ -137,37 +128,27 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
                 int med_start_index = i * 100;
                 for (int j = 0; j < 100; ++j) {
                     int med_index_ciclico = (med_start_index + j) % num_medicamentos;
-                    // Asumimos que PaMedicamento tiene get_id_num()
+
                     int id_a_suministrar = medication[med_index_ciclico].get_id_num();
 
-                    // Llama a suministrarFarmacia.
-                    // Para silenciar el log "Suministrando..." y "Recibido...",
-                    // comenta los 'cout' DENTRO de MediExpress::suministrarFarmacia
-                    // y Farmacia::dispensaMedicam
                     this->suministrarFarmacia(*farmacia, id_a_suministrar);
                 }
             } else {
-                 std::cerr << "ERROR (Paso 5): No se encontro la farmacia con CIF "
+                 std::cerr << "Error: No se encontro la farmacia con CIF "
                            << cifs_farmacias[i] << " en el AVL." << std::endl;
             }
         }
     } else {
-        std::cerr << "ERROR (Paso 5): No hay medicamentos cargados, omitiendo asignacion ciclica." << std::endl;
+        std::cerr << "Error: No hay medicamentos cargados, omitiendo asignacion ciclica." << std::endl;
     }
 
-    std::cout << "--- Constructor MediExpress: Carga FINALIZADA ---" << std::endl << std::endl;
+    std::cout << "=== Constructor MediExpress: Carga finalizada ===" << std::endl << std::endl;
 }
 
 
-// --- IMPLEMENTACIÓN DEL DESTRUCTOR ---
-// Asegúrate de que esto esté en tu .cpp
-MediExpress::~MediExpress() {
-    // No se necesita CÓDIGO aquí dentro.
-    // Los destructores de los miembros (AVL<Farmacia>, VDinamico<PaMedicamento>,
-    // y ListaEnlazada<Laboratorio>) se llaman automáticamente
-    // porque son objetos, no punteros.
 
-    // El simple hecho de que esta implementación exista soluciona el error.
+MediExpress::~MediExpress() {
+
 }
 
 
@@ -309,16 +290,13 @@ int MediExpress::eliminarLabsPorCiudad(const std::string& ciudad) {
         }
 
         if (debe_eliminarse) {
-            // Laboratorio ptr_a_borrar = it.dato(); // <-- ELIMINA ESTO (innecesario)
 
             auto it_siguiente = it;
             it_siguiente.siguiente();
 
-            // Esta es la única llamada que necesitas.
-            // La lista se encarga de borrar el nodo Y de destruir el objeto.
+
             laboratorios.borrar(it);
 
-            // delete &ptr_a_borrar; // <-- ¡¡¡ELIMINA ESTO!!! (LA CAUSA DEL ERROR)
 
             it = it_siguiente;
         } else {
@@ -338,9 +316,7 @@ int MediExpress::eliminarLabsPorCiudad(const std::string& ciudad) {
  */
 PaMedicamento* MediExpress::buscarCompuesto(int id_num) {
     for (unsigned int i = 0; i < medication.tamlog(); ++i) {
-        // Asumimos que PaMedicamento tiene un método get_id_num()
         if (medication[i].get_id_num() == id_num) {
-            // Devuelve la dirección del objeto que está DENTRO del vector
             return &medication[i];
         }
     }
@@ -354,14 +330,11 @@ PaMedicamento* MediExpress::buscarCompuesto(int id_num) {
  * @warning (No es 'const' porque el método 'buscaRec' del AVL devuelve T*).
  */
 Farmacia* MediExpress::buscarFarmacia(const std::string& cif) {
-    // Para buscar en el AVL<Farmacia>, necesitamos crear un objeto Farmacia
-    // "dummy" (ficticio) que solo contenga el CIF, ya que el AVL 
-    // usará su operador< para comparar.
+
     Farmacia farmacia_llave;
     farmacia_llave.setCif(cif);
 
-    // farmacias.buscaRec() buscará y devolverá un puntero al objeto
-    // Farmacia que coincide, o nullptr.
+
     return farmacias.buscaRec(farmacia_llave);
 }
 
@@ -372,36 +345,17 @@ Farmacia* MediExpress::buscarFarmacia(const std::string& cif) {
  */
 void MediExpress::suministrarFarmacia(Farmacia& f, int id_num) {
     
-    // 1. Localizar el medicamento en el almacén central de MediExpress
     PaMedicamento* med_encontrado = this->buscarCompuesto(id_num);
 
     if (med_encontrado) {
-        // 2. Si se encuentra, se lo entregamos a la farmacia.
-        // (La farmacia guardará este puntero en su 'stock' local).
-     //   std::cout << "MediExpress: Suministrando [" << med_encontrado->get_nombre()
-     //             << "] a la farmacia [" << f.getNombre() << "]." << std::endl;
-                  
+
         f.dispensaMedicam(med_encontrado);
     } else {
-        // 3. Si no se encuentra el medicamento en la central
-     //   std::cout << "MediExpress: AVISO: No se pudo encontrar el medicamento con ID "
-        //          << id_num << " para suministrar a [" << f.getNombre() << "]." << std::endl;
+
+        std::cout << "MediExpress: AVISO: No se pudo encontrar el medicamento con ID " << id_num << " para suministrar a [" << f.getNombre() << "]." << std::endl;
     }
 }
 
-/**
- * @brief Busca laboratorios que suministran un Principio Activo (búsqueda por nombre).
- * (Este es el método 'buscarLabs' del UML).
- * @param nombrePA Nombre (parcial o completo) del principio activo.
- * @return Una lista enlazada de punteros a los Laboratorios.
- */
-ListaEnlazada<Laboratorio*> MediExpress::buscarLabs(const std::string& nombrePA) {
-    // Esta función es funcionalmente idéntica a tu 'buscarLabsPorCompuesto'.
-    // Simplemente llamamos a la otra función.
-    // Si quieres, puedes mover la lógica de 'buscarLabsPorCompuesto' aquí
-    // y hacer que 'buscarLabsPorCompuesto' llame a esta.
-    return this->buscarLabsPorCompuesto(nombrePA);
-}
 
 /**
  * @brief Devuelve la altura del árbol AVL de farmacias.

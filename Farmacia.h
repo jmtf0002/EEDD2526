@@ -22,41 +22,48 @@ private:
     VDinamico<PaMedicamento*> dispense;
 
 public:
-    // --- Constructores (Solo Declaraciones) ---
     Farmacia();
+
     Farmacia(std::string cif, std::string provincia, std::string localidad,
              std::string nombre, std::string direccion, std::string codPostal,
              MediExpress* me);
 
-    // --- Getters (Estos sí pueden quedar inline) ---
     std::string getCif() const { return cif; }
+
     std::string getProvincia() const { return provincia; }
+
     std::string getLocalidad() const { return localidad; }
+
     std::string getNombre() const { return nombre; }
+
     std::string getDireccion() const { return direccion; }
+
     std::string getCodPostal() const { return codPostal; }
 
-    // --- Setters (Estos sí pueden quedar inline) ---
     void setCif(const std::string& c) { cif = c; }
+
     void setProvincia(const std::string& p) { provincia = p; }
+
     void setLocalidad(const std::string& l) { localidad = l; }
+
     void setNombre(const std::string& n) { nombre = n; }
+
     void setDireccion(const std::string& d) { direccion = d; }
+
     void setCodPostal(const std::string& cp) { codPostal = cp; }
 
 
-    // --- Operadores (Obligatorios para el AVL, inline) ---
     bool operator<(const Farmacia& other) const {
         return this->cif < other.cif;
     }
+
     bool operator>(const Farmacia& other) const {
         return this->cif > other.cif;
     }
+
     bool operator==(const Farmacia& other) const {
         return this->cif == other.cif;
     }
-
-    // --- MÉTODOS FUNCIONALES (Solo Declaraciones) ---
 
     VDinamico<PaMedicamento*> localizarMedicamentosPorNombre(const std::string& nombre) const;
 

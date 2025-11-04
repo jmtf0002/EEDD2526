@@ -23,22 +23,29 @@ private:
     AVL<Farmacia> farmacias;
 public:
     MediExpress(const std::string& archivo_meds, const std::string& archivo_labs, const std::string& archivo_farma);
+
     ~MediExpress();
     VDinamico<PaMedicamento*> buscarCompuesto(const std::string& nombre);
+
     ListaEnlazada<Laboratorio*> buscarLabCiudad(const std::string& ciudad) const;
+
     ListaEnlazada<Laboratorio*> buscarLabsPorCompuesto(const std::string& compuesto);
+
     void imprimirMedicamentosPorLaboratorio(int idLab) const;
+
     void asignarMedsSinLabAMadrid();
+
     unsigned int totalMedicamentos() const { return medication.tamlog(); }
+
     int totalLaboratorios() const { return laboratorios.tam(); }
+
     int contarMedicamentosSinLab() const;
+
     int eliminarLabsPorCiudad(const std::string& ciudad);
 
-    // --- MÉTODOS NUEVOS (Solo Declaraciones) ---
+    unsigned int getAlturaAVLFarmacias();
 
-    unsigned int getAlturaAVLFarmacias(); // Mover implementación al .cpp
-
-    VDinamico<Farmacia*> getInordenAVLFarmacias(); // Mover implementación al .cpp
+    VDinamico<Farmacia*> getInordenAVLFarmacias();
 
     PaMedicamento* buscarCompuesto(int id_num);
 
@@ -46,7 +53,6 @@ public:
 
     void suministrarFarmacia(Farmacia& f, int id_num);
 
-    ListaEnlazada<Laboratorio*> buscarLabs(const std::string& nombrePA);
 };
 
 #endif //MEDIEXPRESS_H

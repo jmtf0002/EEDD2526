@@ -13,11 +13,9 @@ private:
     unsigned int tamaf = 1;
 
 public:
-    // --- Constructores y Destructor ---
 
     VDinamico() {
         mem = new T[tamaf];
-        // std::cout << "Espacio creado para " << 1 << " dato." << std::endl;
     }
 
     VDinamico(unsigned int tamlog) {
@@ -28,7 +26,6 @@ public:
         }
         tamaf = aux;
         mem = new T[tamaf];
-        // std::cout << "Espacio creado para " << tamaf << " datos." << std::endl;
     }
 
     VDinamico(const VDinamico<T>& origen) {
@@ -38,11 +35,10 @@ public:
         for (unsigned int i = 0; i < tamal; ++i) {
             mem[i] = origen.mem[i];
         }
-        // std::cout << "Copia completa creada." << std::endl;
     }
 
     VDinamico(const VDinamico<T>& origen, unsigned int posicionInicial, unsigned int numElementos) {
-        if (posicionInicial + numElementos > origen.tamal) { // Corregido para usar tamal
+        if (posicionInicial + numElementos > origen.tamal) {
             throw std::out_of_range("Rango fuera de los límites.");
         }
         tamal = numElementos;
@@ -55,15 +51,12 @@ public:
         for (unsigned int i = 0; i < numElementos; ++i) {
             mem[i] = origen.mem[posicionInicial + i];
         }
-        // std::cout << "Copia parcial creada." << std::endl;
     }
 
     ~VDinamico() {
         delete[] mem;
-        // std::cout << "Memoria liberada." << std::endl;
     }
 
-    // --- Operadores ---
 
     VDinamico<T>& operator=(const VDinamico<T>& origen) {
         if (this != &origen) {
@@ -78,7 +71,6 @@ public:
         return *this;
     }
 
-    // Operador [] para escritura/lectura
     T& operator[](unsigned int pos) {
         if (pos >= tamal) {
             throw std::out_of_range("Índice fuera del rango.");
@@ -86,7 +78,6 @@ public:
         return mem[pos];
     }
 
-    // Operador [] const para solo lectura // <-- CORREGIDO
     const T& operator[](unsigned int pos) const {
         if (pos >= tamal) {
             throw std::out_of_range("Índice fuera del rango.");
@@ -94,13 +85,12 @@ public:
         return mem[pos];
     }
 
-    // --- Métodos ---
 
     unsigned int tamlog() const {
         return tamal;
     }
 
-    void insertar(const T& dato, unsigned int pos = -1) { // -1 es más estándar que UINT_MAX
+    void insertar(const T& dato, unsigned int pos = -1) {
         if (pos == (unsigned int)-1) {
             pos = tamal;
         }
@@ -123,7 +113,7 @@ public:
         tamal++;
     }
 
-    T borrar(unsigned int pos = -1) { // -1 es más estándar que UINT_MAX
+    T borrar(unsigned int pos = -1) {
         if (tamal == 0) {
             throw std::out_of_range("El vector está vacío.");
         }
@@ -156,7 +146,6 @@ public:
         std::sort(mem, mem + tamal);
     }
     
-    // La búsqueda no debería modificar el vector, por eso es const // <-- CORREGIDO
     int busquedaBin(const T &dato) const {
         int inf = 0;
         int sup = tamal - 1;
@@ -171,7 +160,7 @@ public:
                 sup = curIn - 1;
             }
         }
-        return -1; // No encontrado
+        return -1;
     }
 
 };
