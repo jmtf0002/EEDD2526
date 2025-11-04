@@ -76,6 +76,11 @@ Farmacia* buscarEnVDinamico(VDinamico<Farmacia>& v, const std::string& cif) {
 }
 
 
+
+/**  @author
+      @author José María Torraleja Franco jmtf0002@red.ujaen.es
+      */
+
 int main() {
 
     const std::string archivo_meds = "data/pa_medicamentos.csv";

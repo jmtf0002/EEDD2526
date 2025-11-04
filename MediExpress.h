@@ -24,7 +24,6 @@ private:
 public:
     MediExpress(const std::string& archivo_meds, const std::string& archivo_labs, const std::string& archivo_farma);
 
-    ~MediExpress();
     VDinamico<PaMedicamento*> buscarCompuesto(const std::string& nombre);
 
     ListaEnlazada<Laboratorio*> buscarLabCiudad(const std::string& ciudad) const;

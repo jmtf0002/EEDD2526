@@ -145,15 +145,6 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
     std::cout << "=== Constructor MediExpress: Carga finalizada ===" << std::endl << std::endl;
 }
 
-
-
-MediExpress::~MediExpress() {
-
-}
-
-
-
-
 int MediExpress::contarMedicamentosSinLab() const {
     int contador = 0;
     for (unsigned int i = 0; i < medication.tamlog(); ++i) {
