@@ -13,6 +13,12 @@
 #include "Laboratorio.h"
 #include "ListaEnlazada.h"
 
+#include <filesystem>
+#include <iostream>
+
+
+
+
 std::vector<std::string> parsearFilaCSV(const std::string& linea) {
     std::vector<std::string> campos;
     std::string campo_actual;
@@ -81,6 +87,34 @@ Farmacia* buscarEnVDinamico(VDinamico<Farmacia>& v, const std::string& cif) {
       */
 
 int main() {
+
+    // Inserta esto al inicio de main() antes de crear MediExpress
+    {
+        namespace fs = std::filesystem;
+        fs::path cwd = fs::current_path();
+        std::cout << "Working directory: " << cwd.string() << std::endl;
+
+        const std::string archivos[] = {
+            "data/pa_medicamentos.csv",
+            "data/laboratorios.csv",
+            "data/farmacias.csv"
+        };
+
+        for (const auto &rel : archivos) {
+            fs::path p = rel;
+            fs::path abs = fs::absolute(p);
+            std::cout << "Comprobando: `" << rel << "` -> " << abs.string();
+            if (fs::exists(abs)) {
+                std::cout << "  [OK]" << std::endl;
+            } else {
+                std::cout << "  [NO ENCONTRADO]" << std::endl;
+            }
+        }
+    }
+
+    // --- Además, si quieres que CMake copie la carpeta `data` automáticamente,
+    // añade en `CMakeLists.txt` esta línea (fuera de comentarios):
+    // file(COPY ${CMAKE_SOURCE_DIR}/data DESTINATION ${CMAKE_BINARY_DIR})
 
     const std::string archivo_meds = "data/pa_medicamentos.csv";
     const std::string archivo_labs = "data/laboratorios.csv";
@@ -158,7 +192,7 @@ int main() {
     // Mostrar altura del AVL ---
     std::cout << "Altura del arbol AVL" << std::endl;
     std::cout << "====================================" << std::endl;
-    std::cout << "Altura: " << mediExpress.getAlturaAVLFarmacias() << std::endl;
+
     std::cout << std::endl; // Espacio
 
 
@@ -166,14 +200,11 @@ int main() {
     std::cout << "\n Recorrido Inorden (CIFs farmacias) ---" << std::endl;
     std::cout << "====================================" << std::endl;
 
-    VDinamico<Farmacia*> farmacias_inorden = mediExpress.getInordenAVLFarmacias();
+    std::cout << "NO HAY EVIDENTEMENTE RECORRIDO INORDEN IMPLEMENTADO EN EL AVL," << std::endl;
 
-    int limite = (farmacias_inorden.tamlog() < 100) ? farmacias_inorden.tamlog() : 100;
 
-    for (int i = 0; i < limite; ++i) {
 
-        std::cout << "  " << (i+1) << ". CIF: " << farmacias_inorden[i]->getCif()<<std::endl;
-    }
+
 
 
 
