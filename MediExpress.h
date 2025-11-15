@@ -6,27 +6,28 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
+#include <list>
 #include "AVL.h"
 #include "VDinamico.h"
 #include "ListaEnlazada.h"
 #include "PaMedicamento.h"
 #include "Laboratorio.h"
 #include "Farmacia.h"
+#include <map>
 
 std::vector<std::string> parsearFilaCSV(const std::string& linea);
 
 class MediExpress {
 private:
-    VDinamico<PaMedicamento> medication;
-    ListaEnlazada<Laboratorio> laboratorios;
-    AVL<Farmacia> farmacias;
+    std::map<int, PaMedicamento> medication;
+    std::list<Laboratorio> laboratorios;
+    std::vector<Farmacia> farmacias;
 public:
     MediExpress(const std::string& archivo_meds, const std::string& archivo_labs, const std::string& archivo_farma);
 
     VDinamico<PaMedicamento*> buscarCompuesto(const std::string& nombre);
 
-    ListaEnlazada<Laboratorio*> buscarLabCiudad(const std::string& ciudad) const;
+    ListaEnlazada<Laboratorio*> buscarLabCiudad(const std::string& ciudad) ;
 
     ListaEnlazada<Laboratorio*> buscarLabsPorCompuesto(const std::string& compuesto);
 
@@ -34,17 +35,15 @@ public:
 
     void asignarMedsSinLabAMadrid();
 
-    unsigned int totalMedicamentos() const { return medication.tamlog(); }
+    unsigned int totalMedicamentos() const { return medication.size(); }
 
-    int totalLaboratorios() const { return laboratorios.tam(); }
+    int totalLaboratorios() const { return laboratorios.size(); }
 
     int contarMedicamentosSinLab() const;
 
     int eliminarLabsPorCiudad(const std::string& ciudad);
 
-    unsigned int getAlturaAVLFarmacias();
 
-    VDinamico<Farmacia*> getInordenAVLFarmacias();
 
     PaMedicamento* buscarCompuesto(int id_num);
 
