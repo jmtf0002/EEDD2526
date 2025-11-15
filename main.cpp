@@ -7,11 +7,9 @@
 
 #include "MediExpress.h"
 #include "Farmacia.h"
-#include "VDinamico.h"
-#include "AVL.h"
+
 #include "PaMedicamento.h"
 #include "Laboratorio.h"
-#include "ListaEnlazada.h"
 
 #include <filesystem>
 #include <iostream>
@@ -71,8 +69,8 @@ std::vector<std::string> parsearFilaCSV(const std::string& linea) {
 }
 
 
-Farmacia* buscarEnVDinamico(VDinamico<Farmacia>& v, const std::string& cif) {
-    for (unsigned i = 0; i < v.tamlog(); ++i) {
+Farmacia* buscarEnVDinamico(std::vector<Farmacia>& v, const std::string& cif) {
+    for (unsigned i = 0; i < v.size(); ++i) {
         if (v[i].getCif() == cif) {
             return &v[i];
         }
@@ -88,34 +86,6 @@ Farmacia* buscarEnVDinamico(VDinamico<Farmacia>& v, const std::string& cif) {
 
 int main() {
 
-    // Inserta esto al inicio de main() antes de crear MediExpress
-    {
-        namespace fs = std::filesystem;
-        fs::path cwd = fs::current_path();
-        std::cout << "Working directory: " << cwd.string() << std::endl;
-
-        const std::string archivos[] = {
-            "data/pa_medicamentos.csv",
-            "data/laboratorios.csv",
-            "data/farmacias.csv"
-        };
-
-        for (const auto &rel : archivos) {
-            fs::path p = rel;
-            fs::path abs = fs::absolute(p);
-            std::cout << "Comprobando: `" << rel << "` -> " << abs.string();
-            if (fs::exists(abs)) {
-                std::cout << "  [OK]" << std::endl;
-            } else {
-                std::cout << "  [NO ENCONTRADO]" << std::endl;
-            }
-        }
-    }
-
-    // --- Además, si quieres que CMake copie la carpeta `data` automáticamente,
-    // añade en `CMakeLists.txt` esta línea (fuera de comentarios):
-    // file(COPY ${CMAKE_SOURCE_DIR}/data DESTINATION ${CMAKE_BINARY_DIR})
-
     const std::string archivo_meds = "data/pa_medicamentos.csv";
     const std::string archivo_labs = "data/laboratorios.csv";
     const std::string archivo_farma = "data/farmacias.csv";
@@ -127,7 +97,7 @@ int main() {
 
     //Programa de prueba 1
 
-    VDinamico<Farmacia> vFarmacias;
+    std::vector<Farmacia> vFarmacias;
     std::ifstream is_farma_vd(archivo_farma);
     std::string fila;
     if (is_farma_vd.is_open()) {
@@ -138,7 +108,7 @@ int main() {
             if (campos.size() == 6) {
                 Farmacia f(campos[0], campos[1], campos[2],
                            campos[3], campos[4], campos[5], &mediExpress);
-                vFarmacias.insertar(f, vFarmacias.tamlog());
+                vFarmacias.push_back(f);
             }
         }
         is_farma_vd.close();
@@ -148,7 +118,7 @@ int main() {
     }
 
     // Leer los 500 primeros CIFs
-    VDinamico<std::string> cif_a_buscar;
+    std::vector<std::string> cif_a_buscar;
     std::ifstream is_farma_cif(archivo_farma);
     int contador_cif = 0;
     if (is_farma_cif.is_open()) {
@@ -157,7 +127,7 @@ int main() {
             if (fila.back() == '\r') fila.pop_back();
             std::vector<std::string> campos = parsearFilaCSV(fila);
             if (campos.size() >= 1) {
-                cif_a_buscar.insertar(campos[0], cif_a_buscar.tamlog());
+                cif_a_buscar.push_back(campos[0]);
                 contador_cif++;
             }
         }
@@ -171,7 +141,7 @@ int main() {
 
 
     auto inicio_avl = std::chrono::high_resolution_clock::now();
-    for (unsigned i = 0; i < cif_a_buscar.tamlog(); ++i) {
+    for (unsigned i = 0; i < cif_a_buscar.size(); ++i) {
         mediExpress.buscarFarmacia(cif_a_buscar[i]);
     }
     auto fin_avl = std::chrono::high_resolution_clock::now();
@@ -180,7 +150,7 @@ int main() {
 
 
     auto inicio_vd = std::chrono::high_resolution_clock::now();
-    for (unsigned i = 0; i < cif_a_buscar.tamlog(); ++i) {
+    for (unsigned i = 0; i < cif_a_buscar.size(); ++i) {
         buscarEnVDinamico(vFarmacias, cif_a_buscar[i]);
     }
     auto fin_vd = std::chrono::high_resolution_clock::now();
@@ -261,8 +231,8 @@ int main() {
     // Buscar y contar laboratorios que trabajen con "MAGNESIO"
     std::cout << "Buscar y contar laboratorios que trabajen con MAGNESIO" << std::endl;
     std::cout << "=================================================" << std::endl;
-    ListaEnlazada<Laboratorio*> labs_magnesio = mediExpress.buscarLabsPorCompuesto("MAGNESIO");
-    std::cout << "El numero de laboratorios que trabajan con MAGNESIO es: " << labs_magnesio.tam() << std::endl;
+    std::list<Laboratorio*> labs_magnesio = mediExpress.buscarLabsPorCompuesto("MAGNESIO");
+    std::cout << "El numero de laboratorios que trabajan con MAGNESIO es: " << labs_magnesio.size() << std::endl;
     std::cout << std::endl;
 
 
@@ -273,13 +243,13 @@ int main() {
     for (const std::string& cif : cif_buffer) {
         Farmacia* farmacia = mediExpress.buscarFarmacia(cif);
         if (farmacia) {
-            VDinamico<PaMedicamento*> meds_virus = farmacia->localizarMedicamentosPorNombre("VIRUS");
+            std::vector<PaMedicamento*> meds_virus = farmacia->localizarMedicamentosPorNombre("VIRUS");
 
-            std::cout << "Laboratorios (ids) que suministran a la farmacia con CIF: " << cif << " con VIRUS: " << meds_virus.tamlog();
+            std::cout << "Laboratorios (ids) que suministran a la farmacia con CIF: " << cif << " con VIRUS: " << meds_virus.size();
 
-            if (meds_virus.tamlog() > 0) {
+            if (meds_virus.size() > 0) {
                 std::cout << " -> ";
-                for (unsigned int i = 0; i < meds_virus.tamlog(); ++i) {
+                for (unsigned int i = 0; i < meds_virus.size(); ++i) {
                     Laboratorio* lab = meds_virus[i]->getLaboratorio();
                     if (lab) {
                         std::cout << lab->getId() << "/";

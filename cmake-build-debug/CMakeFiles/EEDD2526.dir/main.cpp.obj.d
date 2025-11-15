@@ -204,13 +204,6 @@ CMakeFiles/EEDD2526.dir/main.cpp.obj: \
  C:/Users/javim/AppData/Local/Programs/CLion/bin/mingw/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/list \
  C:/Users/javim/AppData/Local/Programs/CLion/bin/mingw/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/bits/stl_list.h \
  C:/Users/javim/AppData/Local/Programs/CLion/bin/mingw/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/bits/list.tcc \
- C:\Users\javim\Desktop\EEDD\EEDD2526-nuevo\AVL.h \
- C:\Users\javim\Desktop\EEDD\EEDD2526-nuevo\VDinamico.h \
- C:/Users/javim/AppData/Local/Programs/CLion/bin/mingw/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/algorithm \
- C:/Users/javim/AppData/Local/Programs/CLion/bin/mingw/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/bits/ranges_algo.h \
- C:/Users/javim/AppData/Local/Programs/CLion/bin/mingw/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/pstl/glue_algorithm_defs.h \
- C:/Users/javim/AppData/Local/Programs/CLion/bin/mingw/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/pstl/execution_defs.h \
- C:\Users\javim\Desktop\EEDD\EEDD2526-nuevo\ListaEnlazada.h \
  C:\Users\javim\Desktop\EEDD\EEDD2526-nuevo\PaMedicamento.h \
  C:\Users\javim\Desktop\EEDD\EEDD2526-nuevo\Laboratorio.h \
  C:\Users\javim\Desktop\EEDD\EEDD2526-nuevo\Farmacia.h \

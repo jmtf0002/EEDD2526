@@ -1,8 +1,6 @@
 file(REMOVE_RECURSE
   "CMakeFiles/EEDD2526.dir/Farmacia.cpp.obj"
   "CMakeFiles/EEDD2526.dir/Farmacia.cpp.obj.d"
-  "CMakeFiles/EEDD2526.dir/ListaEnlazada.cpp.obj"
-  "CMakeFiles/EEDD2526.dir/ListaEnlazada.cpp.obj.d"
   "CMakeFiles/EEDD2526.dir/MediExpress.cpp.obj"
   "CMakeFiles/EEDD2526.dir/MediExpress.cpp.obj.d"
   "CMakeFiles/EEDD2526.dir/main.cpp.obj"

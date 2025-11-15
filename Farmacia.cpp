@@ -15,7 +15,7 @@ Farmacia::Farmacia(std::string cif, std::string provincia, std::string localidad
 
 
 PaMedicamento* Farmacia::buscaMedicam(int id_num) {
-    for (unsigned i = 0; i < dispense.tamlog(); ++i) {
+    for (unsigned i = 0; i < dispense.size(); ++i) {
         if (dispense[i]->get_id_num() == id_num) {
             return dispense[i];
         }
@@ -26,7 +26,7 @@ PaMedicamento* Farmacia::buscaMedicam(int id_num) {
 void Farmacia::dispensaMedicam(PaMedicamento* pa) {
     if (pa) {
 
-        dispense.insertar(pa, dispense.tamlog());
+        dispense.push_back(pa);
     }
 }
 
@@ -39,11 +39,11 @@ void Farmacia::pedidoMedicam(int id_num) {
     linkMedi->suministrarFarmacia(*this, id_num);
 }
 
-VDinamico<PaMedicamento*> Farmacia::localizarMedicamentosPorNombre(const std::string& nombre) const {
-    VDinamico<PaMedicamento*> encontrados;
-    for (unsigned int i = 0; i < dispense.tamlog(); ++i) {
+std::vector<PaMedicamento*> Farmacia::localizarMedicamentosPorNombre(const std::string& nombre) const {
+    std::vector<PaMedicamento*> encontrados;
+    for (unsigned int i = 0; i < dispense.size(); ++i) {
         if (dispense[i]->get_nombre().find(nombre) != std::string::npos) {
-            encontrados.insertar(dispense[i], encontrados.tamlog());
+            encontrados.push_back(dispense[i]);
         }
     }
     return encontrados;

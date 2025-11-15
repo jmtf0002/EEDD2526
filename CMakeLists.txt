@@ -13,5 +13,4 @@ add_executable(EEDD2526
         main.cpp
         MediExpress.cpp
         Farmacia.cpp
-        ListaEnlazada.cpp
 )

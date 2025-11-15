@@ -108,7 +108,7 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
     std::cout << farma_count << " farmacias cargadas." << std::endl;
 
     std::cout << "Paso 6: Asignando stock inicial a farmacias..." << std::endl;
-    VDinamico<std::string> cifs_farmacias;
+    std::vector<std::string> cifs_farmacias;
     std::ifstream is_farma_cifs(archivo_farma);
     std::string fila_cif;
 
@@ -119,7 +119,7 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
 
             std::vector<std::string> campos = parsearFilaCSV(fila_cif);
             if (campos.size() >= 1) {
-                cifs_farmacias.insertar(campos[0], cifs_farmacias.tamlog());
+                cifs_farmacias.push_back(campos[0]);
             }
         }
         is_farma_cifs.close();
@@ -129,7 +129,7 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
 
     unsigned int num_medicamentos = static_cast<unsigned int>(meds_vector.size());
     if (num_medicamentos > 0) {
-        for (unsigned int i = 0; i < cifs_farmacias.tamlog(); ++i) {
+        for (unsigned int i = 0; i < cifs_farmacias.size(); ++i) {
             Farmacia* farmacia = this->buscarFarmacia(cifs_farmacias[i]);
             if (farmacia) {
                 int med_start_index = static_cast<int>(i) * 100;
@@ -162,46 +162,46 @@ int MediExpress::contarMedicamentosSinLab() const {
     return contador;
 }
 
-ListaEnlazada<Laboratorio*> MediExpress::buscarLabCiudad(const std::string& ciudad)  {
-    ListaEnlazada<Laboratorio*> resultados;
+std::list<Laboratorio*> MediExpress::buscarLabCiudad(const std::string& ciudad)  {
+    std::list<Laboratorio*> resultados;
     auto it = laboratorios.begin();
     while (it != laboratorios.end()) {
         if ((*it).getLocalidad().find(ciudad) != std::string::npos) {
-            resultados.insertarFinal(&(*it));
+            resultados.push_back(&(*it));
         }
         ++it;
     }
     return resultados;
 }
 
-VDinamico<PaMedicamento*> MediExpress::buscarCompuesto(const std::string& nombre) {
-    VDinamico<PaMedicamento*> resultados;
+std::vector<PaMedicamento*> MediExpress::buscarCompuesto(const std::string& nombre) {
+    std::vector<PaMedicamento*> resultados;
     for (auto &kv : medication) {
         if (kv.second.get_nombre().find(nombre) != std::string::npos) {
-            resultados.insertar(&kv.second, resultados.tamlog());
+            resultados.push_back(&kv.second);
         }
     }
     return resultados;
 }
 
-ListaEnlazada<Laboratorio*> MediExpress::buscarLabsPorCompuesto(const std::string& compuesto) {
-    ListaEnlazada<Laboratorio*> labs_encontrados;
-    VDinamico<PaMedicamento*> meds = buscarCompuesto(compuesto);
-    VDinamico<int> ids_ya_agregados;
+std::list<Laboratorio*> MediExpress::buscarLabsPorCompuesto(const std::string& compuesto) {
+    std::list<Laboratorio*> labs_encontrados;
+    std::vector<PaMedicamento*> meds = buscarCompuesto(compuesto);
+    std::vector<int> ids_ya_agregados;
 
-    for (unsigned int i = 0; i < meds.tamlog(); ++i) {
+    for (unsigned int i = 0; i < meds.size(); ++i) {
         Laboratorio* lab = meds[i]->getLaboratorio();
         if (lab) {
             bool encontrado = false;
-            for (unsigned int j = 0; j < ids_ya_agregados.tamlog(); ++j) {
+            for (unsigned int j = 0; j < ids_ya_agregados.size(); ++j) {
                 if (ids_ya_agregados[j] == lab->getId()) {
                     encontrado = true;
                     break;
                 }
             }
             if (!encontrado) {
-                labs_encontrados.insertarFinal(lab);
-                ids_ya_agregados.insertar(lab->getId(), ids_ya_agregados.tamlog());
+                labs_encontrados.push_back(lab);
+                ids_ya_agregados.push_back(lab->getId());
             }
         }
     }
@@ -225,39 +225,39 @@ void MediExpress::imprimirMedicamentosPorLaboratorio(int idLab) const {
 }
 
 void MediExpress::asignarMedsSinLabAMadrid() {
-    VDinamico<PaMedicamento*> meds_sin_lab;
+    std::vector<PaMedicamento*> meds_sin_lab;
     for (auto &kv : medication) {
         if (kv.second.getLaboratorio() == nullptr) {
-            meds_sin_lab.insertar(&kv.second, meds_sin_lab.tamlog());
+            meds_sin_lab.push_back(&kv.second);
         }
     }
 
-    ListaEnlazada<Laboratorio*> labs_madrid = buscarLabCiudad("Madrid");
-    auto it_lab = labs_madrid.iteradorInicio();
+    std::list<Laboratorio*> labs_madrid = buscarLabCiudad("Madrid");
+    auto it_lab = labs_madrid.begin();
     int asignaciones = 0;
 
-    for (unsigned int i = 0; i < meds_sin_lab.tamlog(); ++i) {
-        if (!it_lab.haySiguiente()) break;
+    for (unsigned int i = 0; i < meds_sin_lab.size(); ++i) {
+        if (it_lab == labs_madrid.end()) break;
 
-        meds_sin_lab[i]->servidoPor(it_lab.dato());
+        meds_sin_lab[i]->servidoPor(*it_lab);
         asignaciones++;
-        it_lab.siguiente();
+        ++it_lab;
     }
 }
 
 int MediExpress::eliminarLabsPorCiudad(const std::string& ciudad) {
-    VDinamico<Laboratorio*> labs_a_eliminar;
+    std::vector<Laboratorio*> labs_a_eliminar;
 
     //Buscar laboratorios a eliminar
     auto it_lab = laboratorios.begin();
     while (it_lab != laboratorios.end()) {
         if ((*it_lab).getLocalidad().find(ciudad) != std::string::npos) {
-            labs_a_eliminar.insertar(&(*it_lab), labs_a_eliminar.tamlog());
+            labs_a_eliminar.push_back(&(*it_lab));
         }
         ++it_lab;
     }
 
-    if (labs_a_eliminar.tamlog() == 0) {
+    if (labs_a_eliminar.size() == 0) {
         return 0;
     }
 
@@ -265,7 +265,7 @@ int MediExpress::eliminarLabsPorCiudad(const std::string& ciudad) {
     for (auto &kv : medication) {
         Laboratorio* lab_asignado = kv.second.getLaboratorio();
         if (lab_asignado) {
-            for (unsigned int j = 0; j < labs_a_eliminar.tamlog(); ++j) {
+            for (unsigned int j = 0; j < labs_a_eliminar.size(); ++j) {
                 if (lab_asignado == labs_a_eliminar[j]) {
                     kv.second.servidoPor(nullptr);
                     break;
@@ -279,7 +279,7 @@ int MediExpress::eliminarLabsPorCiudad(const std::string& ciudad) {
     while (it != laboratorios.end()) {
         bool debe_eliminarse = false;
         // Comprobamos si el laboratorio actual está en la lista de eliminación
-        for (unsigned int i = 0; i < labs_a_eliminar.tamlog(); ++i) {
+        for (unsigned int i = 0; i < labs_a_eliminar.size(); ++i) {
             if (&(*it) == labs_a_eliminar[i]) {
                 debe_eliminarse = true;
                 break;
@@ -296,7 +296,7 @@ int MediExpress::eliminarLabsPorCiudad(const std::string& ciudad) {
         }
     }
 
-    return labs_a_eliminar.tamlog();
+    return labs_a_eliminar.size();
 }
 
 /**

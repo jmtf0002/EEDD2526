@@ -3,7 +3,8 @@
 
 #include <string>
 #include <iostream>
-#include "VDinamico.h"
+#include <vector>
+
 #include "PaMedicamento.h"
 
 class MediExpress;
@@ -18,7 +19,7 @@ private:
     std::string codPostal;
 
     MediExpress* linkMedi;
-    VDinamico<PaMedicamento*> dispense;
+    std::vector<PaMedicamento*> dispense;
 
 public:
     Farmacia();
@@ -64,7 +65,7 @@ public:
         return this->cif == other.cif;
     }
 
-    VDinamico<PaMedicamento*> localizarMedicamentosPorNombre(const std::string& nombre) const;
+    std::vector<PaMedicamento*> localizarMedicamentosPorNombre(const std::string& nombre) const;
 
     PaMedicamento* buscaMedicam(int id_num);
 

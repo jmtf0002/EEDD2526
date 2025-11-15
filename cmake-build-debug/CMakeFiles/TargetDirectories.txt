@@ -1,3 +1,0 @@
-C:/Users/javim/Desktop/EEDD/EEDD2526-nuevo/cmake-build-debug/CMakeFiles/EEDD2526.dir
-C:/Users/javim/Desktop/EEDD/EEDD2526-nuevo/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/javim/Desktop/EEDD/EEDD2526-nuevo/cmake-build-debug/CMakeFiles/rebuild_cache.dir

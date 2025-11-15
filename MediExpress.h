@@ -1,15 +1,8 @@
 #ifndef MEDIEXPRESS_H
 #define MEDIEXPRESS_H
-
-#include <iostream>
-#include <fstream>
-#include <sstream>
 #include <string>
 #include <vector>
 #include <list>
-#include "AVL.h"
-#include "VDinamico.h"
-#include "ListaEnlazada.h"
 #include "PaMedicamento.h"
 #include "Laboratorio.h"
 #include "Farmacia.h"
@@ -25,11 +18,11 @@ private:
 public:
     MediExpress(const std::string& archivo_meds, const std::string& archivo_labs, const std::string& archivo_farma);
 
-    VDinamico<PaMedicamento*> buscarCompuesto(const std::string& nombre);
+    std::vector<PaMedicamento*> buscarCompuesto(const std::string& nombre);
 
-    ListaEnlazada<Laboratorio*> buscarLabCiudad(const std::string& ciudad) ;
+    std::list<Laboratorio*> buscarLabCiudad(const std::string& ciudad) ;
 
-    ListaEnlazada<Laboratorio*> buscarLabsPorCompuesto(const std::string& compuesto);
+    std::list<Laboratorio*> buscarLabsPorCompuesto(const std::string& compuesto);
 
     void imprimirMedicamentosPorLaboratorio(int idLab) const;
 
