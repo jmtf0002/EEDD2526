@@ -3,20 +3,17 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <chrono> // Para medir el tiempo
+#include <chrono>
 
 #include "MediExpress.h"
 #include "Farmacia.h"
-
 #include "PaMedicamento.h"
 #include "Laboratorio.h"
 
-#include <filesystem>
-#include <iostream>
-
-
-
-
+/**
+ * @brief Parsea una línea de CSV, manejando comillas.
+ * (Función auxiliar necesaria para el constructor de MediExpress)
+ */
 std::vector<std::string> parsearFilaCSV(const std::string& linea) {
     std::vector<std::string> campos;
     std::string campo_actual;
@@ -25,7 +22,6 @@ std::vector<std::string> parsearFilaCSV(const std::string& linea) {
 
     for (size_t i = 0; i < linea.length(); ++i) {
         char c = linea[i];
-
         if (en_campo_con_comillas) {
             if (c == '"') {
                 if (i + 1 < linea.length() && linea[i + 1] == '"') {
@@ -42,223 +38,163 @@ std::vector<std::string> parsearFilaCSV(const std::string& linea) {
                 campos.push_back(campo_actual);
                 campo_actual.clear();
             } else if (c == '"') {
-
                 if (campo_actual.empty()) {
                     en_campo_con_comillas = true;
                 } else {
                     campo_actual += c;
                 }
             } else {
-
                 campo_actual += c;
             }
         }
     }
-
-    // Añadimos el último campo
     campos.push_back(campo_actual);
-
-    // Limpieza final de \r (retorno de carro)
     for (std::string& campo : campos) {
         if (!campo.empty() && campo.back() == '\r') {
             campo.pop_back();
         }
     }
-
     return campos;
 }
 
 
-Farmacia* buscarEnVDinamico(std::vector<Farmacia>& v, const std::string& cif) {
-    for (unsigned i = 0; i < v.size(); ++i) {
-        if (v[i].getCif() == cif) {
-            return &v[i];
-        }
-    }
-    return nullptr;
-}
-
-
-
-/**  @author  Javier Martínez González jmg00144@red.ujaen.es
+/** @author  Javier Martínez González jmg00144@red.ujaen.es
       @author José María Torraleja Franco jmtf0002@red.ujaen.es
       */
-
 int main() {
 
     const std::string archivo_meds = "data/pa_medicamentos.csv";
     const std::string archivo_labs = "data/laboratorios.csv";
     const std::string archivo_farma = "data/farmacias.csv";
 
+    // IDs de los medicamentos
+    const int OXIDO_ID = 3640;
+    const int CARBONATO_ID = 3632;
+    const int CLORURO_ID = 3633;
+    const int CIANURO_ID = 9355;
+    const int OTRO_ID_BORRAR = 3244;
+    const int GRIPE_ID = 997;
 
+    std::cout << "Cargando MediExpress..." << std::endl;
     MediExpress mediExpress(archivo_meds, archivo_labs, archivo_farma);
+    std::cout << "Carga completada." << std::endl << std::endl;
 
+    PaMedicamento* med_comprado = nullptr; // Variable de salida para comprarMedicam
 
+    // --- Ejercicio 1: Comprar magnesio en Sevilla ---
+    std::cout << "Ejercicio 1: Comprar magnesio en Sevilla" << std::endl;
+    std::cout << "=========================================" << std::endl;
+    std::vector<Farmacia*> farmacias_sevilla = mediExpress.buscarFarmacias("SEVILLA");
+    std::cout << "Numero de farmacias en Sevilla: " << farmacias_sevilla.size() << std::endl << std::endl;
 
-    //Programa de prueba 1
+    for (Farmacia* f : farmacias_sevilla) {
+        std::cout << "=== Farmacia: " << f->getNombre() << " ===" << std::endl;
 
-    std::vector<Farmacia> vFarmacias;
-    std::ifstream is_farma_vd(archivo_farma);
-    std::string fila;
-    if (is_farma_vd.is_open()) {
-        while (std::getline(is_farma_vd, fila)) {
-            if (fila.empty()) continue;
-            if (fila.back() == '\r') fila.pop_back();
-            std::vector<std::string> campos = parsearFilaCSV(fila);
-            if (campos.size() == 6) {
-                Farmacia f(campos[0], campos[1], campos[2],
-                           campos[3], campos[4], campos[5], &mediExpress);
-                vFarmacias.push_back(f);
+        // 12 personas van a comprar
+        for (int i = 1; i <= 12; ++i) {
+
+            // Lógica de compra:
+            // 1. Intenta OXIDO (3640)
+            if (f->buscaMedicamID(OXIDO_ID) >= 1) {
+                f->comprarMedicam(OXIDO_ID, 1, med_comprado);
+                std::cout << "La persona " << i << " ha comprado una unidad de OXIDO DE MAGNESIO" << std::endl;
+            }
+            // 2. Si no, intenta CARBONATO (3632)
+            else if (f->buscaMedicamID(CARBONATO_ID) >= 1) {
+                f->comprarMedicam(CARBONATO_ID, 1, med_comprado);
+                std::cout << "La persona " << i << " ha comprado una unidad de CARBONATO DE MAGNESIO" << std::endl;
+            }
+            // 3. Si no, intenta CLORURO (3633)
+            else if (f->buscaMedicamID(CLORURO_ID) >= 1) {
+                f->comprarMedicam(CLORURO_ID, 1, med_comprado);
+                std::cout << "La persona " << i << " ha comprado una unidad de CLORURO DE MAGNESIO" << std::endl;
+            }
+            // 4. Si no hay de ninguno, no compra y se solicitan pedidos
+            else {
+                std::cout << "La persona " << i << " no ha podido comprar ningun medicamento" << std::endl;
+
+                // La llamada a comprarMedicam con stock 0 disparará el pedido (pedidoMedicam)
+                // Pedimos 10 unidades para simular un restock
+                f->comprarMedicam(OXIDO_ID, 10, med_comprado);
+                f->comprarMedicam(CARBONATO_ID, 10, med_comprado);
+                f->comprarMedicam(CLORURO_ID, 10, med_comprado);
             }
         }
-        is_farma_vd.close();
+        std::cout << std::endl; // Espacio entre farmacias
+    }
+
+
+    // --- Ejercicio 2: Farmacias en Madrid con VIRUS ---
+    std::cout << "Ejercicio 2: Farmacias en Madrid con VIRUS" << std::endl;
+    std::cout << "=========================================" << std::endl;
+    std::vector<Farmacia*> farmacias_madrid = mediExpress.buscarFarmacias("MADRID");
+    std::cout << "Numero de farmacias en MADRID: " << farmacias_madrid.size() << std::endl << std::endl;
+
+    for (Farmacia* f : farmacias_madrid) {
+        std::cout << "=== Farmacia: " << f->getNombre() << " ===" << std::endl;
+        std::vector<PaMedicamento*> meds_virus = f->buscaMedicamNombre("VIRUS");
+
+        std::cout << "Numero de VIRUS: " << meds_virus.size() << std::endl;
+        if (meds_virus.size() > 0) {
+            for (PaMedicamento* med : meds_virus) {
+                std::cout << med->get_nombre() << std::endl;
+            }
+        }
+        std::cout << std::endl; // Espacio entre farmacias
+    }
+
+
+    // --- Ejercicio 3: Eliminar CIANURO ---
+    std::cout << "Ejercicio 3: Eliminar CIANURO" << std::endl;
+    std::cout << "=========================================" << std::endl;
+
+    if (mediExpress.eliminarMedicamento(CIANURO_ID)) {
+        std::cout << "Se ha eliminado el CIANURO" << std::endl;
     } else {
-        std::cerr << "Error: No se pudo abrir " << archivo_farma << " para VDinamico." << std::endl;
-        return 1;
+        std::cout << "Error: El CIANURO (ID 9355) no se pudo eliminar." << std::endl;
     }
 
-    // Leer los 500 primeros CIFs
-    std::vector<std::string> cif_a_buscar;
-    std::ifstream is_farma_cif(archivo_farma);
-    int contador_cif = 0;
-    if (is_farma_cif.is_open()) {
-        while (std::getline(is_farma_cif, fila) && contador_cif < 500) {
-            if (fila.empty()) continue;
-            if (fila.back() == '\r') fila.pop_back();
-            std::vector<std::string> campos = parsearFilaCSV(fila);
-            if (campos.size() >= 1) {
-                cif_a_buscar.push_back(campos[0]);
-                contador_cif++;
-            }
-        }
-        is_farma_cif.close();
+    std::cout << "Procedemos a buscar el CIANURO..." << std::endl;
+    if (mediExpress.buscarCompuesto(CIANURO_ID) == nullptr) {
+        std::cout << "El CIANURO se ha eliminado correctamente" << std::endl;
+    } else {
+        std::cout << "ERROR: El CIANURO (ID 9355) sigue en el sistema." << std::endl;
     }
 
-
-    //  Pruebas de tiempo
-    std::cout << "Tiempo de busqueda farmacias AVL vs. vector" << std::endl;
-    std::cout << "====================================" << std::endl;
-
-
-    auto inicio_avl = std::chrono::high_resolution_clock::now();
-    for (unsigned i = 0; i < cif_a_buscar.size(); ++i) {
-        mediExpress.buscarFarmacia(cif_a_buscar[i]);
-    }
-    auto fin_avl = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> tiempo_avl = fin_avl - inicio_avl;
-    std::cout << "Tiempo de lectura AVL: " << tiempo_avl.count() << " segs." << std::endl;
-
-
-    auto inicio_vd = std::chrono::high_resolution_clock::now();
-    for (unsigned i = 0; i < cif_a_buscar.size(); ++i) {
-        buscarEnVDinamico(vFarmacias, cif_a_buscar[i]);
-    }
-    auto fin_vd = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> tiempo_vd = fin_vd - inicio_vd;
-    std::cout << "Tiempo de lectura vector: " << tiempo_vd.count() << " segs." << std::endl;
-    std::cout << std::endl; // Espacio
-
-
-    // Mostrar altura del AVL ---
-    std::cout << "Altura del arbol AVL" << std::endl;
-    std::cout << "====================================" << std::endl;
-
-    std::cout << std::endl; // Espacio
-
-
-    //  Recorrer Inorden y mostrar 100 primeras ---
-    std::cout << "\n Recorrido Inorden (CIFs farmacias) ---" << std::endl;
-    std::cout << "====================================" << std::endl;
-
-    std::cout << "NO HAY EVIDENTEMENTE RECORRIDO INORDEN IMPLEMENTADO EN EL AVL," << std::endl;
-
-
-
-
-
-
-
-    // Programa de prueba 2
-
-    // Crear vector buffer con CIFs
-    std::vector<std::string> cif_buffer = {
-        "37656422V", "46316032N", "77092934Q", "33961602D", "B62351861", "B62351861",
-        "B65828113", "46138599R", "35069965W", "37579913Y", "37682300C",
-        "37643742X", "46112335A", "47980171D", "38116138D", "46315600V",
-        "37640233C", "37931842N", "33964303L", "35022080A", "B66046640",
-        "E66748344", "47640201W", "B66621954", "46121385Z", "X6806622W",
-        "46046390E"
-    };
-
-    const int OXIDO_MAGNESIO_ID = 3640;
-
-    // Buscar "ÓXIDO DE MAGNESIO" y pedir si falta
-    std::cout << "Buscar OXIDO DE MAGNESIO" << std::endl;
-    std::cout << "========================================" << std::endl;
-
-
-    for (const std::string& cif : cif_buffer) {
-        Farmacia* farmacia = mediExpress.buscarFarmacia(cif);
-        if (farmacia) {
-            PaMedicamento* med = farmacia->buscaMedicam(OXIDO_MAGNESIO_ID);
-            if (med == nullptr) {
-                std::cout << " La farmacia con CIF " << cif << " no tiene el medicamento disponible y se ha solicitado el pedido" << std::endl;
-                farmacia->pedidoMedicam(OXIDO_MAGNESIO_ID);
-            } else {
-                std::cout << " La farmacia con CIF " << cif << " tiene el medicamento disponible" << std::endl;
-            }
-        } else {
-            std::cout << " La farmacia con CIF " << cif << " no existe en el sistema." << std::endl;
-        }
-    }
-
-    // Volver a comprobar
-    std::cout << std::endl;
-    for (const std::string& cif : cif_buffer) {
-        Farmacia* farmacia = mediExpress.buscarFarmacia(cif);
-        if (farmacia) {
-            if (farmacia->buscaMedicam(OXIDO_MAGNESIO_ID) != nullptr) {
-                std::cout << "La farmacia con CIF " << cif << " tiene el medicamento disponible" << std::endl;
-            } else {
-                std::cout << "ERROR: La farmacia con CIF " << cif << " aun no tiene el medicamento." << std::endl;
-            }
-        }
-
+    if (!mediExpress.eliminarMedicamento(OTRO_ID_BORRAR)) {
+        std::cout << "No se ha encontrado el medicamento con ID 3244" << std::endl;
+    } else {
+        std::cout << "Se ha eliminado el medicamento con ID 3244" << std::endl;
     }
     std::cout << std::endl;
 
 
-    // Buscar y contar laboratorios que trabajen con "MAGNESIO"
-    std::cout << "Buscar y contar laboratorios que trabajen con MAGNESIO" << std::endl;
-    std::cout << "=================================================" << std::endl;
-    std::list<Laboratorio*> labs_magnesio = mediExpress.buscarLabsPorCompuesto("MAGNESIO");
-    std::cout << "El numero de laboratorios que trabajan con MAGNESIO es: " << labs_magnesio.size() << std::endl;
-    std::cout << std::endl;
+    // --- Ejercicio 4: Gripe en Madrid ---
+    std::cout << "Ejercicio 4: Gripe en Madrid" << std::endl;
+    std::cout << "=========================================" << std::endl;
 
+    const int INCREMENTO_GRIPE = 20;
+    const int STOCK_OBJETIVO = 30; // 10 iniciales + 20 de incremento
 
-    // Buscar farmacias suministradas con "VIRUS"
-    std::cout << "Localizar laboratorios que suministran a las farmacias con VIRUS" << std::endl;
-    std::cout << "=================================================" << std::endl;
+    PaMedicamento* med_gripe = mediExpress.buscarCompuesto(GRIPE_ID);
 
-    for (const std::string& cif : cif_buffer) {
-        Farmacia* farmacia = mediExpress.buscarFarmacia(cif);
-        if (farmacia) {
-            std::vector<PaMedicamento*> meds_virus = farmacia->localizarMedicamentosPorNombre("VIRUS");
-
-            std::cout << "Laboratorios (ids) que suministran a la farmacia con CIF: " << cif << " con VIRUS: " << meds_virus.size();
-
-            if (meds_virus.size() > 0) {
-                std::cout << " -> ";
-                for (unsigned int i = 0; i < meds_virus.size(); ++i) {
-                    Laboratorio* lab = meds_virus[i]->getLaboratorio();
-                    if (lab) {
-                        std::cout << lab->getId() << "/";
-                    }
-                }
-            }
-            std::cout << std::endl;
+    // 1. Incrementar el stock
+    if (med_gripe) {
+        for (Farmacia* f : farmacias_madrid) {
+            f->nuevoStock(med_gripe, INCREMENTO_GRIPE);
         }
+    } else {
+        std::cout << "Error: No se encontro el medicamento de la gripe ID 997" << std::endl;
     }
 
+    // 2. Listar las que tengan 30 unidades
+    for (Farmacia* f : farmacias_madrid) {
+        if (f->buscaMedicamID(GRIPE_ID) == STOCK_OBJETIVO) {
+            std::cout << f->getNombre() << std::endl;
+        }
+    }
+    std::cout << std::endl;
+
+    std::cout << "--- Pruebas finalizadas ---" << std::endl;
     return 0;
 }

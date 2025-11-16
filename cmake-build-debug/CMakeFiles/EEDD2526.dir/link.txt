@@ -1,3 +1,0 @@
-C:\Users\javim\AppData\Local\Programs\CLion\bin\cmake\win\x64\bin\cmake.exe -E rm -f CMakeFiles\EEDD2526.dir/objects.a
-C:\Users\javim\AppData\Local\Programs\CLion\bin\mingw\bin\ar.exe qc CMakeFiles\EEDD2526.dir/objects.a @CMakeFiles\EEDD2526.dir\objects1.rsp
-C:\Users\javim\AppData\Local\Programs\CLion\bin\mingw\bin\g++.exe -g -Wl,--whole-archive CMakeFiles\EEDD2526.dir/objects.a -Wl,--no-whole-archive -o EEDD2526.exe -Wl,--out-implib,libEEDD2526.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\EEDD2526.dir\linkLibs.rsp
