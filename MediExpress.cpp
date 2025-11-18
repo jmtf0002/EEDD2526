@@ -3,7 +3,6 @@
 #include <fstream>
 #include <vector>
 
-// --- Constructor (con Paso 6 corregido) ---
 MediExpress::MediExpress(const std::string& archivo_meds, const std::string& archivo_labs, const std::string& archivo_farma) {
     std::cout << "=== Constructor MediExpress: Iniciando Carga ===" << std::endl;
 
@@ -31,7 +30,6 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
     }
     std::cout << med_count << " medicamentos cargados." << std::endl;
 
-    // Construyo vector de punteros a medicamentos para acceso indexado y orden estable
     std::vector<PaMedicamento*> meds_vector;
     meds_vector.reserve(medication.size());
     for (auto &kv : medication) {
@@ -77,7 +75,7 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
         for (std::size_t i = 0; i < meds_vector.size(); ++i) {
             if (it_lab == laboratorios.end()) break;
             meds_vector[i]->servidoPor(&(*it_lab));
-            if (i % 2 == 1) { // Asigna 2 medicamentos por laboratorio
+            if (i % 2 == 1) {
                 ++it_lab;
             }
         }
@@ -97,7 +95,6 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
 
             if (campos.size() == 6) {
                 try {
-                    // Se crea la farmacia y se añade al vector 'farmacias'
                     farmacias.emplace_back(campos[0], campos[1], campos[2],
                                            campos[3], campos[4], campos[5], this);
                     farma_count++;
@@ -109,23 +106,19 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
     std::cout << farma_count << " farmacias cargadas." << std::endl;
 
     std::cout << "Paso 6: Asignando stock inicial a farmacias..." << std::endl;
-    // El PDF pide 10 medicamentos de cada tipo
     const int STOCK_INICIAL = 10;
 
     unsigned int num_medicamentos = static_cast<unsigned int>(meds_vector.size());
     if (num_medicamentos > 0) {
-        // Iteramos sobre el vector de farmacias que acabamos de cargar
-        for (unsigned int i = 0; i < farmacias.size(); ++i) {
-            Farmacia* farmacia = &farmacias[i]; // Obtenemos puntero a la farmacia en el vector
 
-            // Asignación consecutiva cada 100 medicamentos
+        for (unsigned int i = 0; i < farmacias.size(); ++i) {
+            Farmacia* farmacia = &farmacias[i];
+
             int med_start_index = static_cast<int>(i) * 100;
             for (int j = 0; j < 100; ++j) {
                 int med_index_ciclico = (med_start_index + j) % static_cast<int>(num_medicamentos);
                 int id_a_suministrar = meds_vector[med_index_ciclico]->get_id_num();
 
-                // Llamamos a la nueva función con 3 argumentos
-                // Esto llamará a Farmacia::nuevoStock
                 this->suministrarFarmacia(*farmacia, id_a_suministrar, STOCK_INICIAL);
             }
         }
@@ -137,7 +130,6 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
 }
 
 
-// --- Métodos de búsqueda (sin cambios) ---
 
 int MediExpress::contarMedicamentosSinLab() const {
     int contador = 0;
@@ -174,7 +166,7 @@ std::vector<PaMedicamento*> MediExpress::buscarCompuesto(const std::string& nomb
 std::list<Laboratorio*> MediExpress::buscarLabsPorCompuesto(const std::string& compuesto) {
     std::list<Laboratorio*> labs_encontrados;
     std::vector<PaMedicamento*> meds = buscarCompuesto(compuesto);
-    std::vector<int> ids_ya_agregados; // Para evitar duplicados
+    std::vector<int> ids_ya_agregados;
 
     for (unsigned int i = 0; i < meds.size(); ++i) {
         Laboratorio* lab = meds[i]->getLaboratorio();
@@ -212,7 +204,6 @@ void MediExpress::imprimirMedicamentosPorLaboratorio(int idLab) const {
 }
 
 void MediExpress::asignarMedsSinLabAMadrid() {
-    // 1. Encontrar medicamentos sin laboratorio
     std::vector<PaMedicamento*> meds_sin_lab;
     for (auto &kv : medication) {
         if (kv.second.getLaboratorio() == nullptr) {
@@ -220,15 +211,13 @@ void MediExpress::asignarMedsSinLabAMadrid() {
         }
     }
 
-    // 2. Encontrar laboratorios de Madrid
     std::list<Laboratorio*> labs_madrid = buscarLabCiudad("Madrid");
 
-    // 3. Asignar
     auto it_lab = labs_madrid.begin();
     int asignaciones = 0;
 
     for (unsigned int i = 0; i < meds_sin_lab.size(); ++i) {
-        if (it_lab == labs_madrid.end()) break; // Si no hay más labs, parar
+        if (it_lab == labs_madrid.end()) break;
 
         meds_sin_lab[i]->servidoPor(*it_lab);
         asignaciones++;
@@ -239,7 +228,6 @@ void MediExpress::asignarMedsSinLabAMadrid() {
 int MediExpress::eliminarLabsPorCiudad(const std::string& ciudad) {
     std::vector<Laboratorio*> labs_a_eliminar;
 
-    // 1. Buscar laboratorios a eliminar
     auto it_lab = laboratorios.begin();
     while (it_lab != laboratorios.end()) {
         if ((*it_lab).getLocalidad().find(ciudad) != std::string::npos) {
@@ -249,27 +237,24 @@ int MediExpress::eliminarLabsPorCiudad(const std::string& ciudad) {
     }
 
     if (labs_a_eliminar.size() == 0) {
-        return 0; // No hay nada que borrar
+        return 0;
     }
 
-    // 2. Desvincular medicamentos (usar iterador del map)
     for (auto &kv : medication) {
         Laboratorio* lab_asignado = kv.second.getLaboratorio();
         if (lab_asignado) {
             for (unsigned int j = 0; j < labs_a_eliminar.size(); ++j) {
                 if (lab_asignado == labs_a_eliminar[j]) {
-                    kv.second.servidoPor(nullptr); // Desvincular
+                    kv.second.servidoPor(nullptr);
                     break;
                 }
             }
         }
     }
 
-    // 3. Borrar el laboratorio (Iterador de std::list)
     auto it = laboratorios.begin();
     while (it != laboratorios.end()) {
         bool debe_eliminarse = false;
-        // Comprobamos si el laboratorio actual está en la lista de eliminación
         for (unsigned int i = 0; i < labs_a_eliminar.size(); ++i) {
             if (&(*it) == labs_a_eliminar[i]) {
                 debe_eliminarse = true;
@@ -278,7 +263,7 @@ int MediExpress::eliminarLabsPorCiudad(const std::string& ciudad) {
         }
 
         if (debe_eliminarse) {
-            it = laboratorios.erase(it); // erase devuelve el siguiente iterador
+            it = laboratorios.erase(it);
         } else {
             ++it;
         }
@@ -287,44 +272,32 @@ int MediExpress::eliminarLabsPorCiudad(const std::string& ciudad) {
     return labs_a_eliminar.size();
 }
 
-/**
- * @brief Sobrecarga de buscarCompuesto. Busca un medicamento por su ID numérico.
- */
+
 PaMedicamento* MediExpress::buscarCompuesto(int id_num) {
     auto it = medication.find(id_num);
     if (it != medication.end()) {
-        return &it->second; // Devuelve puntero al PaMedicamento en el map
+        return &it->second;
     }
     return nullptr;
 }
 
-/**
- * @brief Busca una farmacia en el vector por su CIF.
- */
+
 Farmacia* MediExpress::buscarFarmacia(const std::string& cif) {
     for (std::size_t i = 0; i < farmacias.size(); ++i) {
         if (farmacias[i].getCif() == cif) {
-            return &farmacias[i]; // Devuelve puntero a la Farmacia en el vector
+            return &farmacias[i];
         }
     }
     return nullptr;
 }
 
 
-// --- MÉTODOS ACTUALIZADOS/NUEVOS DE LA PRÁCTICA 4 ---
 
-/**
- * @brief Suministra stock a una farmacia (versión P4).
- * @param f Referencia a la farmacia (se modifica su stock).
- * @param id_num ID del medicamento.
- * @param n Cantidad de stock a suministrar.
- */
+
 void MediExpress::suministrarFarmacia(Farmacia& f, int id_num, int n) {
-    // 1. Localiza el medicamento en el map 'medication'
     PaMedicamento* med_encontrado = this->buscarCompuesto(id_num);
 
     if (med_encontrado) {
-        // 2. Llama a 'nuevoStock' en la farmacia
         f.nuevoStock(med_encontrado, n);
     } else {
         std::cout << "MediExpress: AVISO: No se pudo encontrar el medicamento con ID " << id_num
@@ -332,12 +305,9 @@ void MediExpress::suministrarFarmacia(Farmacia& f, int id_num, int n) {
     }
 }
 
-/**
- * @brief Devuelve todas las farmacias de una provincia.
- */
+
 std::vector<Farmacia*> MediExpress::buscarFarmacias(const std::string& provincia) {
     std::vector<Farmacia*> farmacias_encontradas;
-    // Iteramos sobre el vector de farmacias
     for (size_t i = 0; i < farmacias.size(); ++i) {
         if (farmacias[i].getProvincia() == provincia) {
             farmacias_encontradas.push_back(&farmacias[i]);
@@ -346,24 +316,19 @@ std::vector<Farmacia*> MediExpress::buscarFarmacias(const std::string& provincia
     return farmacias_encontradas;
 }
 
-/**
- * @brief Elimina un medicamento del sistema (P4).
- */
+
 bool MediExpress::eliminarMedicamento(int id_num) {
-    // 1. Buscar el medicamento en el map 'medication'
     auto it_med = medication.find(id_num);
 
     if (it_med == medication.end()) {
-        return false; // No existe, no se puede borrar
+        return false;
     }
 
-    // 2. Eliminarlo del map 'medication'
     medication.erase(it_med);
 
-    // 3. Eliminar el stock de TODAS las farmacias
     for (size_t i = 0; i < farmacias.size(); ++i) {
         farmacias[i].eliminarStock(id_num);
     }
 
-    return true; // Borrado exitoso
+    return true;
 }

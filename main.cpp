@@ -67,7 +67,6 @@ int main() {
     const std::string archivo_labs = "data/laboratorios.csv";
     const std::string archivo_farma = "data/farmacias.csv";
 
-    // IDs de los medicamentos
     const int OXIDO_ID = 3640;
     const int CARBONATO_ID = 3632;
     const int CLORURO_ID = 3633;
@@ -79,9 +78,9 @@ int main() {
     MediExpress mediExpress(archivo_meds, archivo_labs, archivo_farma);
     std::cout << "Carga completada." << std::endl << std::endl;
 
-    PaMedicamento* med_comprado = nullptr; // Variable de salida para comprarMedicam
+    PaMedicamento* med_comprado = nullptr;
 
-    // --- Ejercicio 1: Comprar magnesio en Sevilla ---
+    // Ejercicio 1: Comprar magnesio en Sevilla
     std::cout << "Ejercicio 1: Comprar magnesio en Sevilla" << std::endl;
     std::cout << "=========================================" << std::endl;
     std::vector<Farmacia*> farmacias_sevilla = mediExpress.buscarFarmacias("SEVILLA");
@@ -90,41 +89,40 @@ int main() {
     for (Farmacia* f : farmacias_sevilla) {
         std::cout << "=== Farmacia: " << f->getNombre() << " ===" << std::endl;
 
-        // 12 personas van a comprar
         for (int i = 1; i <= 12; ++i) {
 
-            // Lógica de compra:
-            // 1. Intenta OXIDO (3640)
-            if (f->buscaMedicamID(OXIDO_ID) >= 1) {
+
+            if (f->consultarStock(OXIDO_ID) >= 1) {
                 f->comprarMedicam(OXIDO_ID, 1, med_comprado);
                 std::cout << "La persona " << i << " ha comprado una unidad de OXIDO DE MAGNESIO" << std::endl;
             }
-            // 2. Si no, intenta CARBONATO (3632)
-            else if (f->buscaMedicamID(CARBONATO_ID) >= 1) {
+            else if (f->consultarStock(CARBONATO_ID) >= 1) {
                 f->comprarMedicam(CARBONATO_ID, 1, med_comprado);
                 std::cout << "La persona " << i << " ha comprado una unidad de CARBONATO DE MAGNESIO" << std::endl;
             }
-            // 3. Si no, intenta CLORURO (3633)
-            else if (f->buscaMedicamID(CLORURO_ID) >= 1) {
+            else if (f->consultarStock(CLORURO_ID) >= 1) {
                 f->comprarMedicam(CLORURO_ID, 1, med_comprado);
                 std::cout << "La persona " << i << " ha comprado una unidad de CLORURO DE MAGNESIO" << std::endl;
             }
-            // 4. Si no hay de ninguno, no compra y se solicitan pedidos
             else {
                 std::cout << "La persona " << i << " no ha podido comprar ningun medicamento" << std::endl;
 
-                // La llamada a comprarMedicam con stock 0 disparará el pedido (pedidoMedicam)
-                // Pedimos 10 unidades para simular un restock
+
                 f->comprarMedicam(OXIDO_ID, 10, med_comprado);
                 f->comprarMedicam(CARBONATO_ID, 10, med_comprado);
                 f->comprarMedicam(CLORURO_ID, 10, med_comprado);
             }
         }
-        std::cout << std::endl; // Espacio entre farmacias
+        std::cout << "[Stock Restante]:" << std::endl;
+        std::cout << "Oxido (3640):     " << f->consultarStock(OXIDO_ID) << " unidades" << std::endl;
+        std::cout << "Carbonato (3632): " << f->consultarStock(CARBONATO_ID) << " unidades" << std::endl;
+        std::cout << "Cloruro (3633):   " << f->consultarStock(CLORURO_ID) << " unidades" << std::endl;
+
+        std::cout << std::endl;
     }
 
 
-    // --- Ejercicio 2: Farmacias en Madrid con VIRUS ---
+    // Ejercicio 2: Farmacias en Madrid con VIRUS
     std::cout << "Ejercicio 2: Farmacias en Madrid con VIRUS" << std::endl;
     std::cout << "=========================================" << std::endl;
     std::vector<Farmacia*> farmacias_madrid = mediExpress.buscarFarmacias("MADRID");
@@ -140,11 +138,11 @@ int main() {
                 std::cout << med->get_nombre() << std::endl;
             }
         }
-        std::cout << std::endl; // Espacio entre farmacias
+        std::cout << std::endl;
     }
 
 
-    // --- Ejercicio 3: Eliminar CIANURO ---
+    // Ejercicio 3: Eliminar CIANURO
     std::cout << "Ejercicio 3: Eliminar CIANURO" << std::endl;
     std::cout << "=========================================" << std::endl;
 
@@ -169,16 +167,14 @@ int main() {
     std::cout << std::endl;
 
 
-    // --- Ejercicio 4: Gripe en Madrid ---
+    //Ejercicio 4: Gripe en Madrid
     std::cout << "Ejercicio 4: Gripe en Madrid" << std::endl;
     std::cout << "=========================================" << std::endl;
 
     const int INCREMENTO_GRIPE = 20;
-    const int STOCK_OBJETIVO = 30; // 10 iniciales + 20 de incremento
 
     PaMedicamento* med_gripe = mediExpress.buscarCompuesto(GRIPE_ID);
 
-    // 1. Incrementar el stock
     if (med_gripe) {
         for (Farmacia* f : farmacias_madrid) {
             f->nuevoStock(med_gripe, INCREMENTO_GRIPE);
@@ -187,9 +183,8 @@ int main() {
         std::cout << "Error: No se encontro el medicamento de la gripe ID 997" << std::endl;
     }
 
-    // 2. Listar las que tengan 30 unidades
     for (Farmacia* f : farmacias_madrid) {
-        if (f->buscaMedicamID(GRIPE_ID) == STOCK_OBJETIVO) {
+        if (f->consultarStock(GRIPE_ID) == 30) {
             std::cout << f->getNombre() << std::endl;
         }
     }
