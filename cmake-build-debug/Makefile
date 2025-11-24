@@ -176,6 +176,54 @@ MediExpress.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\EEDD2526.dir\build.make CMakeFiles/EEDD2526.dir/MediExpress.cpp.s
 .PHONY : MediExpress.cpp.s
 
+Stock.obj: Stock.cpp.obj
+.PHONY : Stock.obj
+
+# target to build an object file
+Stock.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\EEDD2526.dir\build.make CMakeFiles/EEDD2526.dir/Stock.cpp.obj
+.PHONY : Stock.cpp.obj
+
+Stock.i: Stock.cpp.i
+.PHONY : Stock.i
+
+# target to preprocess a source file
+Stock.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\EEDD2526.dir\build.make CMakeFiles/EEDD2526.dir/Stock.cpp.i
+.PHONY : Stock.cpp.i
+
+Stock.s: Stock.cpp.s
+.PHONY : Stock.s
+
+# target to generate assembly for a file
+Stock.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\EEDD2526.dir\build.make CMakeFiles/EEDD2526.dir/Stock.cpp.s
+.PHONY : Stock.cpp.s
+
+ThashMedicam.obj: ThashMedicam.cpp.obj
+.PHONY : ThashMedicam.obj
+
+# target to build an object file
+ThashMedicam.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\EEDD2526.dir\build.make CMakeFiles/EEDD2526.dir/ThashMedicam.cpp.obj
+.PHONY : ThashMedicam.cpp.obj
+
+ThashMedicam.i: ThashMedicam.cpp.i
+.PHONY : ThashMedicam.i
+
+# target to preprocess a source file
+ThashMedicam.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\EEDD2526.dir\build.make CMakeFiles/EEDD2526.dir/ThashMedicam.cpp.i
+.PHONY : ThashMedicam.cpp.i
+
+ThashMedicam.s: ThashMedicam.cpp.s
+.PHONY : ThashMedicam.s
+
+# target to generate assembly for a file
+ThashMedicam.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\EEDD2526.dir\build.make CMakeFiles/EEDD2526.dir/ThashMedicam.cpp.s
+.PHONY : ThashMedicam.cpp.s
+
 main.obj: main.cpp.obj
 .PHONY : main.obj
 
@@ -215,6 +263,12 @@ help:
 	@echo ... MediExpress.obj
 	@echo ... MediExpress.i
 	@echo ... MediExpress.s
+	@echo ... Stock.obj
+	@echo ... Stock.i
+	@echo ... Stock.s
+	@echo ... ThashMedicam.obj
+	@echo ... ThashMedicam.i
+	@echo ... ThashMedicam.s
 	@echo ... main.obj
 	@echo ... main.i
 	@echo ... main.s

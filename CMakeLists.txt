@@ -15,6 +15,8 @@ add_executable(EEDD2526
         MediExpress.cpp
         Farmacia.cpp
         Stock.cpp
+        ThashMedicam.cpp
+        ThashMedicam.h
         # NOTA: Si Laboratorio o PaMedicamento tuvieran sus propios
         # archivos .cpp, deberías añadirlos aquí también.
         # Por ahora, asumo que no los tienen.

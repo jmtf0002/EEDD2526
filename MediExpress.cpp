@@ -52,9 +52,7 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
 
             if (campos.size() == 5) {
                 try {
-                    Laboratorio* l = new Laboratorio(std::stoi(campos[0]), campos[1], campos[2], campos[3], campos[4]);
-                    laboratorios.push_back(*l);
-                    delete l;
+                    laboratorios.emplace_back(std::stoi(campos[0]), campos[1], campos[2], campos[3], campos[4]);
                     lab_count++;
                 } catch (const std::exception& e) {
                     std::cout << " Linea " << num_linea << " DESCARTADA (Error de conversion, ej. ID no numerico o cabecera)."

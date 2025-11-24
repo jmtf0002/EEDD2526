@@ -1,6 +1,6 @@
 #include "Stock.h"
 
-// Constructor para búsquedas (objeto "dummy") [cite: 77]
+// Constructor para búsquedas (objeto "dummy")
 Stock::Stock(int id) : id_PaMed(id), num_stock(0) {
     // Este constructor se usa para crear un objeto temporal para buscar en el set.
 }
@@ -18,14 +18,13 @@ int Stock::getNumStock() const {
     return num_stock;
 }
 
-// Métodos para modificar el stock [cite: 19]
+// Métodos para modificar el stock
 void Stock::incrementa(int n) {
     this->num_stock += n;
 }
 
 void Stock::decrementa(int n) {
-    // La lógica de negocio en Farmacia::comprarMedicam debe asegurarse
-    // de que no se llame a decrementar si el stock es insuficiente[cite: 28].
+
     this->num_stock -= n;
 }
 

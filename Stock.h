@@ -10,14 +10,14 @@
  */
 class Stock {
 private:
-    int id_PaMed;   // ID del PaMedicamento [cite: 18, 71]
-    int num_stock;  // Número de unidades disponibles [cite: 18, 71]
+    int id_PaMed;
+    int num_stock;
 
 public:
     /**
      * @brief Constructor para búsquedas.
      * Crea un objeto Stock "vacío" solo con el ID.
-     * Se usa para buscar y borrar en el std::set[cite: 77].
+     * Se usa para buscar y borrar en el std::set
      * @param id ID del medicamento a buscar.
      */
     Stock(int id);
@@ -34,13 +34,13 @@ public:
      * @brief Incrementa el número de unidades del stock.
      * @param n Cantidad a añadir.
      */
-    void incrementa(int n); // [cite: 19, 71]
+    void incrementa(int n);
 
     /**
      * @brief Decrementa el número de unidades del stock.
      * @param n Cantidad a restar.
      */
-    void decrementa(int n); // [cite: 19, 71]
+    void decrementa(int n);
 
     // --- Getters ---
 
