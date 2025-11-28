@@ -12,11 +12,11 @@
 
 #include "PaMedicamento.h"
 
-//Estado de cada celda
+// Estado de cada celda de la tabla hash
 enum Estado {
     EMPTY,      // 0: Nunca ocupado
-    OCCUPIED,   // 1: Ocupado con un elemento.
-    DELETED     // 2: Borrado.
+    OCCUPIED,   // 1: Ocupado con un elemento
+    DELETED     // 2: Borrado (tumba)
 };
 
 // Estructura de las celdas
@@ -25,108 +25,109 @@ struct Slot {
     Estado estado;
 
     Slot() : medicamento(nullptr), estado(EMPTY) {}
-
 };
 
 class ThashMedicam {
-private:
-    int T; // que sea primo
-    int n_elementos; // Contador de elementos ocupados
-    std::vector<Slot> tabla;
-    float lambda_max; // Factor de carga máximo permitido
-
-    // Tipos de dispersión
+public:
+    // Tipos de dispersión disponibles
     enum HashType { QUADRATIC, DOUBLE };
-    HashType current_hash_type;
 
-    // h1(k) = k mod M (posición inicial)
+private:
+    int T;              // Tamaño de la tabla (primo)
+    int n_elementos;    // Número de elementos ocupados
+    std::vector<Slot> tabla;
+    float lambda_max;   // Factor de carga máximo permitido
+    HashType current_hash_type; // Tipo de dispersión configurada
+
+    // --- ESTADÍSTICAS DE RENDIMIENTO ---
+    unsigned int max_colisiones;    // Máximo de colisiones en una sola inserción
+    unsigned long total_colisiones; // Total acumulado de colisiones
+    unsigned int num_ops_insertar;  // Total de operaciones de inserción
+    unsigned int num_max_10;        // Inserciones que superaron 10 colisiones
+    unsigned int num_redispersiones;// Número de veces que se ha redimensionado la tabla
+
+    // --- FUNCIONES DE HASH PRIVADAS ---
+    // h1(k) = k mod T
     int h1(unsigned long clave) const {
         return clave % T;
     }
 
-    // h2(k) para Dispersión Doble
-    // Variantes: h2(k) = R - (k mod R), donde R es un primo < M
-    // Usamos un R fijo para este ejemplo, pero luego si no se cambia
+    // h2(k) para Dispersión Doble: 1 + (k mod R)
     int h2(unsigned long clave) const {
-        // R debe ser un primo menor que T. Usaremos T - 1 como base.
-        // Se debe asegurar que h2(k) nunca sea 0.
-        // Asumimos R = T - 2 (si T es primo > 2)
-        const int R = 31; // Constante pequeña para garantizar R < T
-        return 1 + (clave % R);
+        // Usamos R = T - 2 (o 1 si T es muy pequeño) para asegurar R < T
+        int R_dyn = (T > 2) ? T - 2 : 1;
+        return 1 + (clave % R_dyn);
     }
 
-    // funcion de dispersión
-
     /**
-     * @brief Función de dispersión con secuencia de sondeo.
-     * @param clave Clave de dispersión (ID numérico).
-     * @param intento Número de sondeo (i).
-     * @return int La posición final h(k, i).
+     * @brief Función de dispersión principal.
+     * Calcula la posición basándose en el tipo (Quadratic o Double).
      */
     int hash(unsigned long clave, int intento) const;
 
-    // --- FUNCIONES AUXILIARES ---
+    // Funciones auxiliares matemáticas
     bool es_primo(int n) const;
     int siguiente_primo(int n) const;
 
 public:
-    // --- CONSTRUCTORES Y DESTRUCTORES ---
-
+    // --- CONSTRUCTORES Y DESTRUCTOR ---
     /**
-     * @brief Constructor principal. Calcula T para garantizar lambda_max.
-     * @param maxElementos Número máximo de elementos esperados.
-     * @param lambda Factor de carga determinado (por defecto 0.7).
+     * @brief Constructor. Calcula T para cumplir lambda.
      */
     ThashMedicam(int maxElementos, float lambda = 0.7);
-
-    /**
-     * @brief Constructor copia (Copia Profunda).
-     */
     ThashMedicam(const ThashMedicam &thash);
-
-    /**
-     * @brief Operador de asignación (Copia Profunda).
-     */
     ThashMedicam& operator=(const ThashMedicam &thash);
-
-    /**
-     * @brief Destructor (Libera memoria de los PaMedicamento*).
-     */
     ~ThashMedicam();
 
-
+    // --- OPERACIONES PRINCIPALES ---
     /**
-     * @brief Inserta un PaMedicamento. No permite repetidos.
-     * @param clave Clave (ID).
-     * @param pa Objeto PaMedicamento a insertar.
-     * @return bool Verdadero si se insertó, falso si ya existía.
+     * @brief Inserta un medicamento. Si supera lambda, redispersa.
+     * @return true si se insertó, false si ya existía.
      */
     bool insertar(unsigned long clave, PaMedicamento &pa);
 
     /**
-     * @brief Busca un PaMedicamento.
-     * @param clave Clave (ID).
-     * @return Medicam* Puntero al objeto (o nullptr).
+     * @brief Busca un medicamento por su ID.
      */
     PaMedicamento* buscar(unsigned long clave);
 
     /**
-     * @brief Borra un PaMedicamento (marca como DELETED).
-     * @param clave Clave (ID).
-     * @return bool Verdadero si se borró, falso si no se encontró.
+     * @brief Borra un medicamento (marca como DELETED).
      */
     bool borrar(unsigned long clave);
 
+    // --- MÉTODOS DE REDISPERSIÓN (PAREJAS) ---
+    void redispersar(unsigned int nuevo_tam);
 
+    /**
+     * @brief Cambia el factor de carga máximo.
+     * Si el nuevo lambda es menor que el actual, fuerza redispersión inmediata.
+     */
+    void setLambda(float l);
+
+    // --- GETTERS Y UTILIDADES ---
     int getM() const { return T; }
     int getNumElementos() const { return n_elementos; }
-    float getLambda() const { return (float)n_elementos / T; }
     void setHashType(HashType type) { current_hash_type = type; }
 
-    // void muestraEstadoTabla() const; // Se puede añadir si se requiere.
-    // void redispersar(unsigned tam);
+    // Estadísticas
+    float factorCarga() const { return (float)n_elementos / T; }
+    unsigned int tamTabla() const { return (unsigned int)T; }
+    unsigned int maxColisiones() const { return max_colisiones; }
+    unsigned int numMax10() const { return num_max_10; }
+    float promedioColisiones() const {
+        if (num_ops_insertar == 0) return 0.0f;
+        return (float)total_colisiones / num_ops_insertar;
+    }
+
+    // Utilidades para MediExpress
+    void mostrarEstadoTabla();
+
+    /**
+     * @brief Devuelve punteros a todos los medicamentos válidos.
+     * Necesario para recorrer la tabla desde fuera (iteradores).
+     */
+    std::vector<PaMedicamento*> getEntradasValidas() const;
 };
-
-
 
 #endif //THASHMEDICAM_H
