@@ -24,19 +24,15 @@ bool Farmacia::operator==(const Farmacia& other) const {
     return this->cif == other.cif;
 }
 
-
 int Farmacia::buscaMedicamID(int id_num) {
-    Stock dummy_para_buscar(id_num);
-
-    auto it = order.find(dummy_para_buscar);
+    auto it = order.find(id_num);
 
     if (it != order.end()) {
-        return it->getNumStock();
+        return it->second.getNumStock();
     } else {
         return 0;
     }
 }
-
 
 int Farmacia::comprarMedicam(int id_num, int n, PaMedicamento*& result) {
     if (!linkMedi) {
@@ -53,14 +49,9 @@ int Farmacia::comprarMedicam(int id_num, int n, PaMedicamento*& result) {
     }
 
     if (stock_inicial >= n) {
-        Stock dummy(id_num);
-        auto it = order.find(dummy);
-
+        auto it = order.find(id_num);
         if (it != order.end()) {
-            Stock stock_actualizado = *it;
-            order.erase(it);
-            stock_actualizado.decrementa(n);
-            order.insert(stock_actualizado);
+            it->second.decrementa(n);
         }
     } else {
         this->pedidoMedicam(id_num, n);
@@ -68,7 +59,6 @@ int Farmacia::comprarMedicam(int id_num, int n, PaMedicamento*& result) {
 
     return stock_inicial;
 }
-
 
 void Farmacia::pedidoMedicam(int id_num, int n) {
     if (linkMedi == nullptr) {
@@ -79,36 +69,22 @@ void Farmacia::pedidoMedicam(int id_num, int n) {
     linkMedi->suministrarFarmacia(*this, id_num, n);
 }
 
-
 void Farmacia::nuevoStock(PaMedicamento* pa, int n) {
     if (pa == nullptr) return;
 
-    Stock dummy(pa->get_id_num());
-    auto it = order.find(dummy);
+    int id = pa->get_id_num();
+    auto it = order.find(id);
 
     if (it != order.end()) {
-        Stock stock_actualizado = *it;
-        order.erase(it);
-        stock_actualizado.incrementa(n);
-        order.insert(stock_actualizado);
+        it->second.incrementa(n);
     } else {
-        Stock nuevo_stock(pa->get_id_num(), n);
-        order.insert(nuevo_stock);
+        order.insert(std::make_pair(id, Stock(id, n)));
     }
 }
-
 
 bool Farmacia::eliminarStock(int id_num) {
-    Stock dummy(id_num);
-    auto it = order.find(dummy);
-
-    if (it != order.end()) {
-        order.erase(it);
-        return true;
-    }
-    return false;
+    return order.erase(id_num) > 0;
 }
-
 
 std::vector<PaMedicamento*> Farmacia::buscaMedicamNombre(const std::string& nom) const {
     std::vector<PaMedicamento*> encontrados;
@@ -116,8 +92,8 @@ std::vector<PaMedicamento*> Farmacia::buscaMedicamNombre(const std::string& nom)
         return encontrados;
     }
 
-    for (const Stock& s : order) {
-        PaMedicamento* med = linkMedi->buscarCompuesto(s.getIdPaMed());
+    for (const auto& par : order) {
+        PaMedicamento* med = linkMedi->buscarCompuesto(par.first);
 
         if (med && med->get_nombre().find(nom) != std::string::npos) {
             encontrados.push_back(med);
@@ -127,11 +103,10 @@ std::vector<PaMedicamento*> Farmacia::buscaMedicamNombre(const std::string& nom)
 }
 
 int Farmacia::consultarStock(int id_num) const {
-    Stock dummy(id_num);
-    auto it = order.find(dummy);
+    auto it = order.find(id_num);
 
     if (it != order.end()) {
-        return it->getNumStock();
+        return it->second.getNumStock();
     }
     return 0;
 }

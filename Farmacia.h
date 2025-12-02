@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iostream>
+#include <map>
 #include <vector>
 #include <set>
 #include "Stock.h"
@@ -19,8 +20,7 @@ private:
     std::string direccion;
     std::string codPostal;
     MediExpress* linkMedi;
-    std::set<Stock> order;
-
+    std::map<int,Stock> order;
     int buscaMedicamID(int id_num);
 
 public:
