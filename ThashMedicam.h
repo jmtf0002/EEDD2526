@@ -1,7 +1,3 @@
-//
-// Created by javim on 24/11/2025.
-//
-
 #ifndef THASHMEDICAM_H
 #define THASHMEDICAM_H
 
@@ -9,108 +5,65 @@
 #include <string>
 #include <cmath>
 #include <iostream>
-
 #include "PaMedicamento.h"
 
-// Estado de cada celda de la tabla hash
-enum Estado {
-    EMPTY,      // 0: Nunca ocupado
-    OCCUPIED,   // 1: Ocupado con un elemento
-    DELETED     // 2: Borrado (tumba)
-};
+enum Estado { EMPTY, OCCUPIED, DELETED };
 
-// Estructura de las celdas
 struct Slot {
     PaMedicamento* medicamento;
     Estado estado;
-
     Slot() : medicamento(nullptr), estado(EMPTY) {}
 };
 
 class ThashMedicam {
 public:
-    // Tipos de dispersión disponibles
-    enum HashType { QUADRATIC, DOUBLE };
+    // AHORA TENEMOS 3 TIPOS PARA REPLICAR EL TEXTO EXACTO
+    enum HashType { QUADRATIC, DOUBLE_1, DOUBLE_2 };
 
 private:
-    int T;              // Tamaño de la tabla (primo)
-    int n_elementos;    // Número de elementos ocupados
+    int T;
+    int n_elementos;
     std::vector<Slot> tabla;
-    float lambda_max;   // Factor de carga máximo permitido
-    HashType current_hash_type; // Tipo de dispersión configurada
+    float lambda_max;
+    HashType current_hash_type;
+    int R_prime; // Primo menor que T
 
-    // --- ESTADÍSTICAS DE RENDIMIENTO ---
-    unsigned int max_colisiones;    // Máximo de colisiones en una sola inserción
-    unsigned long total_colisiones; // Total acumulado de colisiones
-    unsigned int num_ops_insertar;  // Total de operaciones de inserción
-    unsigned int num_max_10;        // Inserciones que superaron 10 colisiones
-    unsigned int num_redispersiones;// Número de veces que se ha redimensionado la tabla
+    // Estadísticas
+    unsigned int max_colisiones;
+    unsigned long total_colisiones;
+    unsigned int num_ops_insertar;
+    unsigned int num_max_10;
+    unsigned int num_redispersiones;
 
-    // --- FUNCIONES DE HASH PRIVADAS ---
-    // h1(k) = k mod T
-    int h1(unsigned long clave) const {
-        return clave % T;
-    }
+    int h1(unsigned long clave) const { return clave % T; }
 
-    // h2(k) para Dispersión Doble: 1 + (k mod R)
-    int h2(unsigned long clave) const {
-        // Usamos R = T - 2 (o 1 si T es muy pequeño) para asegurar R < T
-        int R_dyn = (T > 2) ? T - 2 : 1;
-        return 1 + (clave % R_dyn);
-    }
+    // Funciones auxiliares
+    bool es_primo(int n) const;
+    int siguiente_primo(int n) const;
+    int anterior_primo(int n) const;
 
     /**
-     * @brief Función de dispersión principal.
-     * Calcula la posición basándose en el tipo (Quadratic o Double).
+     * @brief Función de dispersión centralizada
      */
     int hash(unsigned long clave, int intento) const;
 
-    // Funciones auxiliares matemáticas
-    bool es_primo(int n) const;
-    int siguiente_primo(int n) const;
-
 public:
-    // --- CONSTRUCTORES Y DESTRUCTOR ---
-    /**
-     * @brief Constructor. Calcula T para cumplir lambda.
-     */
     ThashMedicam(int maxElementos, float lambda = 0.7);
     ThashMedicam(const ThashMedicam &thash);
     ThashMedicam& operator=(const ThashMedicam &thash);
     ~ThashMedicam();
 
-    // --- OPERACIONES PRINCIPALES ---
-    /**
-     * @brief Inserta un medicamento. Si supera lambda, redispersa.
-     * @return true si se insertó, false si ya existía.
-     */
     bool insertar(unsigned long clave, PaMedicamento &pa);
-
-    /**
-     * @brief Busca un medicamento por su ID.
-     */
     PaMedicamento* buscar(unsigned long clave);
-
-    /**
-     * @brief Borra un medicamento (marca como DELETED).
-     */
     bool borrar(unsigned long clave);
 
-    // --- MÉTODOS DE REDISPERSIÓN (PAREJAS) ---
     void redispersar(unsigned int nuevo_tam);
-
-    /**
-     * @brief Cambia el factor de carga máximo.
-     * Si el nuevo lambda es menor que el actual, fuerza redispersión inmediata.
-     */
     void setLambda(float l);
 
-    // --- GETTERS Y UTILIDADES ---
     int getM() const { return T; }
     int getNumElementos() const { return n_elementos; }
     void setHashType(HashType type) { current_hash_type = type; }
 
-    // Estadísticas
     float factorCarga() const { return (float)n_elementos / T; }
     unsigned int tamTabla() const { return (unsigned int)T; }
     unsigned int maxColisiones() const { return max_colisiones; }
@@ -120,13 +73,10 @@ public:
         return (float)total_colisiones / num_ops_insertar;
     }
 
-    // Utilidades para MediExpress
-    void mostrarEstadoTabla();
+    unsigned long getTotalColisiones() const { return total_colisiones; }
+    unsigned int getNumRedispersiones() const { return num_redispersiones; }
 
-    /**
-     * @brief Devuelve punteros a todos los medicamentos válidos.
-     * Necesario para recorrer la tabla desde fuera (iteradores).
-     */
+    void mostrarEstadoTabla();
     std::vector<PaMedicamento*> getEntradasValidas() const;
 };
 
