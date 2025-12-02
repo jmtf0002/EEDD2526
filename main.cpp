@@ -227,5 +227,5 @@ int main() {
     mediExpress.forzarCambioLambda(0.3f);
     mediExpress.mostrarEstadoTablaHash();
 
-    return 0;
+    return 0; //a
 }
