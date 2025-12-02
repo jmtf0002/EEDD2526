@@ -8,9 +8,11 @@
 
 #include "MediExpress.h"
 #include "Farmacia.h"
-#include "Laboratorio.h"
 #include "PaMedicamento.h"
 #include "ThashMedicam.h"
+
+/**  @author Javier Martínez González mgg00000@red.ujaen.es
+     @author Jose María Torraleja Franco jmtf0002@red.ujaen.es */
 
 const std::string ARCHIVO_MEDS = "data/pa_medicamentos.csv";
 const std::string ARCHIVO_LABS = "data/laboratorios.csv";
