@@ -5,9 +5,14 @@
 #include <string>
 #include <cmath>
 #include <iostream>
+
 #include "PaMedicamento.h"
 
-enum Estado { EMPTY, OCCUPIED, DELETED };
+enum Estado {
+    EMPTY,      // 0: Nunca ocupado
+    OCCUPIED,   // 1: Ocupado con un elemento
+    DELETED     // 2: Borrado (tumba)
+};
 
 struct Slot {
     PaMedicamento* medicamento;
@@ -17,7 +22,6 @@ struct Slot {
 
 class ThashMedicam {
 public:
-    // AHORA TENEMOS 3 TIPOS PARA REPLICAR EL TEXTO EXACTO
     enum HashType { QUADRATIC, DOUBLE_1, DOUBLE_2 };
 
 private:
@@ -26,7 +30,6 @@ private:
     std::vector<Slot> tabla;
     float lambda_max;
     HashType current_hash_type;
-    int R_prime; // Primo menor que T
 
     // Estadísticas
     unsigned int max_colisiones;
@@ -35,17 +38,15 @@ private:
     unsigned int num_max_10;
     unsigned int num_redispersiones;
 
+    // Hash helpers
     int h1(unsigned long clave) const { return clave % T; }
+    int h2_v1(unsigned long clave) const;
+    int h2_v2(unsigned long clave) const;
+    int hash(unsigned long clave, int intento) const;
 
-    // Funciones auxiliares
     bool es_primo(int n) const;
     int siguiente_primo(int n) const;
     int anterior_primo(int n) const;
-
-    /**
-     * @brief Función de dispersión centralizada
-     */
-    int hash(unsigned long clave, int intento) const;
 
 public:
     ThashMedicam(int maxElementos, float lambda = 0.7);
@@ -60,23 +61,27 @@ public:
     void redispersar(unsigned int nuevo_tam);
     void setLambda(float l);
 
+    // Getters y Setters
     int getM() const { return T; }
     int getNumElementos() const { return n_elementos; }
     void setHashType(HashType type) { current_hash_type = type; }
 
+    // Estadísticas públicas
     float factorCarga() const { return (float)n_elementos / T; }
     unsigned int tamTabla() const { return (unsigned int)T; }
     unsigned int maxColisiones() const { return max_colisiones; }
     unsigned int numMax10() const { return num_max_10; }
+    unsigned long getTotalColisiones() const { return total_colisiones; }     // NUEVO
+    unsigned int getNumRedispersiones() const { return num_redispersiones; }  // NUEVO
+
     float promedioColisiones() const {
         if (num_ops_insertar == 0) return 0.0f;
         return (float)total_colisiones / num_ops_insertar;
     }
 
-    unsigned long getTotalColisiones() const { return total_colisiones; }
-    unsigned int getNumRedispersiones() const { return num_redispersiones; }
-
+    // Modificado para imprimir con el formato exacto del Ejercicio 5
     void mostrarEstadoTabla();
+
     std::vector<PaMedicamento*> getEntradasValidas() const;
 };
 

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cmath>
 
+// --- FUNCIONES AUXILIARES ---
 bool ThashMedicam::es_primo(int n) const {
     if (n <= 1) return false;
     if (n <= 3) return true;
@@ -19,17 +20,54 @@ int ThashMedicam::siguiente_primo(int n) const {
 
 int ThashMedicam::anterior_primo(int n) const {
     int primo = n - 1;
-    while (primo > 2 && !es_primo(primo)) primo--;
-    return primo;
+    while (primo >= 2) {
+        if (es_primo(primo)) return primo;
+        primo--;
+    }
+    return 2;
 }
 
+// --- HASH ---
+int ThashMedicam::h2_v1(unsigned long clave) const {
+    static int R = -1;
+    static int cached_T = -1;
+    if (R == -1 || cached_T != T) {
+        R = anterior_primo(T);
+        cached_T = T;
+    }
+    return 1 + (clave % R);
+}
+
+int ThashMedicam::h2_v2(unsigned long clave) const {
+    static int R2 = -1;
+    static int cached_T2 = -1;
+    if (R2 == -1 || cached_T2 != T) {
+        int R1 = anterior_primo(T);
+        R2 = anterior_primo(R1);
+        cached_T2 = T;
+    }
+    return 1 + (clave % R2);
+}
+
+int ThashMedicam::hash(unsigned long clave, int intento) const {
+    unsigned long pos_final = 0;
+    if (current_hash_type == QUADRATIC) {
+        pos_final = (h1(clave) + (unsigned long)intento * intento) % T;
+    } else if (current_hash_type == DOUBLE_1) {
+        pos_final = (h1(clave) + (unsigned long)intento * h2_v1(clave)) % T;
+    } else {
+        pos_final = (h1(clave) + (unsigned long)intento * h2_v2(clave)) % T;
+    }
+    return (int)pos_final;
+}
+
+// --- CONSTRUCTOR ---
 ThashMedicam::ThashMedicam(int maxElementos, float lambda)
     : lambda_max(lambda), n_elementos(0), current_hash_type(DOUBLE_1),
       max_colisiones(0), total_colisiones(0), num_ops_insertar(0), num_max_10(0),
       num_redispersiones(0) {
     int tam_minimo = (int)std::ceil(maxElementos / lambda);
     T = siguiente_primo(tam_minimo);
-    R_prime = anterior_primo(T);
     tabla.resize(T);
 }
 
@@ -37,10 +75,10 @@ ThashMedicam::~ThashMedicam() {
     for (int i = 0; i < T; ++i) if (tabla[i].estado == OCCUPIED) delete tabla[i].medicamento;
 }
 
+// --- COPIA Y ASIGNACION ---
 ThashMedicam::ThashMedicam(const ThashMedicam &thash)
     : T(thash.T), n_elementos(thash.n_elementos), tabla(thash.T),
       lambda_max(thash.lambda_max), current_hash_type(thash.current_hash_type),
-      R_prime(thash.R_prime),
       max_colisiones(thash.max_colisiones), total_colisiones(thash.total_colisiones),
       num_ops_insertar(thash.num_ops_insertar), num_max_10(thash.num_max_10),
       num_redispersiones(thash.num_redispersiones) {
@@ -54,10 +92,14 @@ ThashMedicam::ThashMedicam(const ThashMedicam &thash)
 ThashMedicam& ThashMedicam::operator=(const ThashMedicam &thash) {
     if (this != &thash) {
         for (int i = 0; i < T; ++i) if (tabla[i].estado == OCCUPIED) delete tabla[i].medicamento;
-        T = thash.T; n_elementos = thash.n_elementos; lambda_max = thash.lambda_max;
-        current_hash_type = thash.current_hash_type; R_prime = thash.R_prime;
-        max_colisiones = thash.max_colisiones; total_colisiones = thash.total_colisiones;
-        num_ops_insertar = thash.num_ops_insertar; num_max_10 = thash.num_max_10;
+        T = thash.T;
+        n_elementos = thash.n_elementos;
+        lambda_max = thash.lambda_max;
+        current_hash_type = thash.current_hash_type;
+        max_colisiones = thash.max_colisiones;
+        total_colisiones = thash.total_colisiones;
+        num_ops_insertar = thash.num_ops_insertar;
+        num_max_10 = thash.num_max_10;
         num_redispersiones = thash.num_redispersiones;
         tabla.resize(T);
         for (int i = 0; i < T; ++i) {
@@ -69,35 +111,12 @@ ThashMedicam& ThashMedicam::operator=(const ThashMedicam &thash) {
     return *this;
 }
 
-// --- FUNCIÓN HASH ACTUALIZADA ---
-int ThashMedicam::hash(unsigned long clave, int intento) const {
-    unsigned long pos_final = 0;
-
-    // 1. Cuadrática Estándar: h(k) + i^2
-    if (current_hash_type == QUADRATIC) {
-        pos_final = (h1(clave) + (unsigned long)intento * intento) % T;
-    }
-    // 2. Doble 1: h2 = 1 + (k % R)  <-- Esta es la "buena" del PDF
-    else if (current_hash_type == DOUBLE_1) {
-        int h2 = 1 + (clave % R_prime);
-        pos_final = (h1(clave) + (unsigned long)intento * h2) % T;
-    }
-    // 3. Doble 2: h2 = R - (k % R)  <-- Variante común alternativa
-    else if (current_hash_type == DOUBLE_2) {
-        int h2 = R_prime - (clave % R_prime);
-        pos_final = (h1(clave) + (unsigned long)intento * h2) % T;
-    }
-
-    return (int)pos_final;
-}
-
+// --- REDISPERSIÓN ---
 void ThashMedicam::redispersar(unsigned int nuevo_tam) {
-    std::cout << "  [ThashMedicam] Redispersando tabla... (T anterior: " << T << ", Nuevo T: " << nuevo_tam << ")" << std::endl;
     num_redispersiones++;
     std::vector<PaMedicamento*> antiguos = getEntradasValidas();
     tabla.clear();
     T = nuevo_tam;
-    R_prime = anterior_primo(T);
     tabla.resize(T);
     n_elementos = 0;
     for (PaMedicamento* p : antiguos) {
@@ -109,19 +128,23 @@ void ThashMedicam::redispersar(unsigned int nuevo_tam) {
 void ThashMedicam::setLambda(float l) {
     lambda_max = l;
     if (factorCarga() > lambda_max) {
-        std::cout << "  [ThashMedicam] Nuevo lambda (" << l << ") menor que factor actual. Forzando redispersion." << std::endl;
         int nuevo_tam = siguiente_primo((int)(T * 1.30));
         redispersar(nuevo_tam);
     }
 }
 
+// --- INSERTAR ---
 bool ThashMedicam::insertar(unsigned long clave, PaMedicamento &pa) {
     if (factorCarga() >= lambda_max) {
         int nuevo_tam = siguiente_primo((int)(T * 1.30));
         redispersar(nuevo_tam);
     }
-    int intento = 0; int pos; int pos_deleted = -1;
+
+    int intento = 0;
+    int pos;
+    int pos_deleted = -1;
     num_ops_insertar++;
+
     while (intento < T) {
         pos = hash(clave, intento);
         if (tabla[pos].estado == OCCUPIED) {
@@ -132,8 +155,10 @@ bool ThashMedicam::insertar(unsigned long clave, PaMedicamento &pa) {
             if (intento > max_colisiones) max_colisiones = intento;
             total_colisiones += intento;
             if (intento > 10) num_max_10++;
+
             int pos_final = (pos_deleted != -1) ? pos_deleted : pos;
             if (tabla[pos_final].estado == DELETED && tabla[pos_final].medicamento) delete tabla[pos_final].medicamento;
+
             tabla[pos_final].medicamento = new PaMedicamento(pa);
             tabla[pos_final].estado = OCCUPIED;
             n_elementos++;
@@ -174,27 +199,20 @@ bool ThashMedicam::borrar(unsigned long clave) {
     return false;
 }
 
+// --- MOSTRAR ESTADO (Formato Ejercicio 5) ---
 void ThashMedicam::mostrarEstadoTabla() {
-    std::string tipoStr = "Desconocido";
-    if(current_hash_type == QUADRATIC) tipoStr = "Cuadratica";
-    else if(current_hash_type == DOUBLE_1) tipoStr = "Doble 1";
-    else if(current_hash_type == DOUBLE_2) tipoStr = "Doble 2";
-
-    std::cout << "\n=== ESTADO INTERNO TABLA HASH ===" << std::endl;
-    std::cout << " Tipo Hash: " << tipoStr << std::endl;
-    std::cout << " Tamano (T): " << T << " (R_prime: " << R_prime << ")" << " | Elementos: " << n_elementos << std::endl;
-    std::cout << " Factor Carga: " << factorCarga() << " (Max: " << lambda_max << ")" << std::endl;
-    std::cout << " Num Redispersiones: " << num_redispersiones << std::endl;
-    std::cout << "---------------------------------" << std::endl;
-    std::cout << " Max Colisiones: " << maxColisiones() << std::endl;
-    std::cout << " Promedio Colisiones: " << promedioColisiones() << std::endl;
-    std::cout << " Inserciones > 10 colisiones: " << numMax10() << std::endl;
-    std::cout << "=================================\n" << std::endl;
+    std::cout << "Tamano de la tabla: " << T << std::endl;
+    std::cout << "Numero de medicamentos: " << n_elementos << std::endl;
+    std::cout << "Maximo colisiones: " << max_colisiones << std::endl;
+    std::cout << "Factor de carga: " << factorCarga() << std::endl;
+    std::cout << "Promedio de colisiones: " << promedioColisiones() << std::endl;
+    std::cout << "Mas de 10 colisiones: " << num_max_10 << std::endl;
+    std::cout << "Total colisiones: " << total_colisiones << std::endl;
+    std::cout << "Redispersiones: " << num_redispersiones << std::endl;
 }
 
 std::vector<PaMedicamento*> ThashMedicam::getEntradasValidas() const {
     std::vector<PaMedicamento*> encontrados;
-    encontrados.reserve(n_elementos);
     for (const auto& slot : tabla) {
         if (slot.estado == OCCUPIED && slot.medicamento != nullptr) encontrados.push_back(slot.medicamento);
     }

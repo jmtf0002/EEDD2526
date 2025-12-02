@@ -55,6 +55,7 @@ public:
     void forzarCambioLambda(float nuevo_lambda) {
         if(idMedication) idMedication->setLambda(nuevo_lambda);
     }
+    Farmacia* buscarFarmaciaPorCiudad(const std::string& ciudad);
 };
 
 #endif //MEDIEXPRESS_H
