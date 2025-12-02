@@ -4,8 +4,7 @@
 #include <string>
 #include <vector>
 #include <list>
-#include <map>           // Necesario para multimap
-#include <set>
+#include <map>
 #include "PaMedicamento.h"
 #include "Laboratorio.h"
 #include "Farmacia.h"
@@ -22,8 +21,7 @@ private:
 
     std::list<Laboratorio> laboratorios;
 
-    // --- CAMBIO PARA CUMPLIR EL PDF STRICTO ---
-    // Clave: Provincia (string), Valor: Farmacia
+
     std::multimap<std::string, Farmacia> farmacias;
 
 public:

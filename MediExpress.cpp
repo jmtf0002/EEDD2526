@@ -240,10 +240,8 @@ bool MediExpress::eliminarMedicamento(int id_num) {
 }
 
 Farmacia* MediExpress::buscarFarmaciaPorCiudad(const std::string& ciudad) {
-    // Recorremos todas las farmacias independientemente de su provincia
     for (auto& par : farmacias) {
-        // par.second es el objeto Farmacia
-        // Usamos find para ser flexibles (por si hay espacios extra)
+
         if (par.second.getLocalidad().find(ciudad) != std::string::npos) {
             return &par.second;
         }

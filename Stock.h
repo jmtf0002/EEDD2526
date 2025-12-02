@@ -42,7 +42,6 @@ public:
      */
     void decrementa(int n);
 
-    // --- Getters ---
 
     /**
      * @brief Obtiene el ID del medicamento asociado.

@@ -2,7 +2,6 @@
 #include <iostream>
 #include <cmath>
 
-// --- FUNCIONES AUXILIARES ---
 bool ThashMedicam::es_primo(int n) const {
     if (n <= 1) return false;
     if (n <= 3) return true;
@@ -27,7 +26,6 @@ int ThashMedicam::anterior_primo(int n) const {
     return 2;
 }
 
-// --- HASH ---
 int ThashMedicam::h2_v1(unsigned long clave) const {
     static int R = -1;
     static int cached_T = -1;
@@ -61,7 +59,6 @@ int ThashMedicam::hash(unsigned long clave, int intento) const {
     return (int)pos_final;
 }
 
-// --- CONSTRUCTOR ---
 ThashMedicam::ThashMedicam(int maxElementos, float lambda)
     : lambda_max(lambda), n_elementos(0), current_hash_type(DOUBLE_1),
       max_colisiones(0), total_colisiones(0), num_ops_insertar(0), num_max_10(0),
@@ -75,7 +72,6 @@ ThashMedicam::~ThashMedicam() {
     for (int i = 0; i < T; ++i) if (tabla[i].estado == OCCUPIED) delete tabla[i].medicamento;
 }
 
-// --- COPIA Y ASIGNACION ---
 ThashMedicam::ThashMedicam(const ThashMedicam &thash)
     : T(thash.T), n_elementos(thash.n_elementos), tabla(thash.T),
       lambda_max(thash.lambda_max), current_hash_type(thash.current_hash_type),
@@ -111,7 +107,6 @@ ThashMedicam& ThashMedicam::operator=(const ThashMedicam &thash) {
     return *this;
 }
 
-// --- REDISPERSIÓN ---
 void ThashMedicam::redispersar(unsigned int nuevo_tam) {
     num_redispersiones++;
     std::vector<PaMedicamento*> antiguos = getEntradasValidas();
@@ -133,7 +128,6 @@ void ThashMedicam::setLambda(float l) {
     }
 }
 
-// --- INSERTAR ---
 bool ThashMedicam::insertar(unsigned long clave, PaMedicamento &pa) {
     if (factorCarga() >= lambda_max) {
         int nuevo_tam = siguiente_primo((int)(T * 1.30));
@@ -199,7 +193,6 @@ bool ThashMedicam::borrar(unsigned long clave) {
     return false;
 }
 
-// --- MOSTRAR ESTADO (Formato Ejercicio 5) ---
 void ThashMedicam::mostrarEstadoTabla() {
     std::cout << "Tamano de la tabla: " << T << std::endl;
     std::cout << "Numero de medicamentos: " << n_elementos << std::endl;

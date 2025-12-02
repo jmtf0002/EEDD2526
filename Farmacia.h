@@ -4,10 +4,9 @@
 #include <string>
 #include <iostream>
 #include <vector>
-#include <set> // Necesario para std::set
-#include "Stock.h" // Necesario para la clase Stock
+#include <set>
+#include "Stock.h"
 
-// Declaraciones adelantadas para evitar incluir los .h completos aquí
 class MediExpress;
 class PaMedicamento;
 
@@ -44,8 +43,7 @@ public:
     void setNombre(const std::string& n) { nombre = n; }
     void setDireccion(const std::string& d) { direccion = d; }
     void setCodPostal(const std::string& cp) { codPostal = cp; }
-    MediExpress* getLinkMedi() const { return linkMedi; } // Getter para linkMedi
-
+    MediExpress* getLinkMedi() const { return linkMedi; }
     bool operator<(const Farmacia& other) const;
     bool operator>(const Farmacia& other) const;
     bool operator==(const Farmacia& other) const;
