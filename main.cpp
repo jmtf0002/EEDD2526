@@ -1,233 +1,249 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <chrono>
-#include <list>
-#include <fstream>
 #include <iomanip>
-
 #include "MediExpress.h"
-#include "Farmacia.h"
-#include "PaMedicamento.h"
-#include "ThashMedicam.h"
+#include "Usuario.h"
 
-/**  @author Javier Martínez González mgg00000@red.ujaen.es
-     @author Jose María Torraleja Franco jmtf0002@red.ujaen.es */
-
+// Definición de archivos
 const std::string ARCHIVO_MEDS = "data/pa_medicamentos.csv";
 const std::string ARCHIVO_LABS = "data/laboratorios.csv";
-const std::string ARCHIVO_FARMA = "data/farmacias.csv";
-
-std::vector<std::string> parsearFilaCSV(const std::string& linea) {
-    std::vector<std::string> campos;
-    std::string campo_actual;
-    bool en_campo_con_comillas = false;
-    char delimitador = ';';
-    for (size_t i = 0; i < linea.length(); ++i) {
-        char c = linea[i];
-        if (en_campo_con_comillas) {
-            if (c == '"') {
-                if (i + 1 < linea.length() && linea[i + 1] == '"') { campo_actual += '"'; i++; }
-                else { en_campo_con_comillas = false; }
-            } else { campo_actual += c; }
-        } else {
-            if (c == delimitador) { campos.push_back(campo_actual); campo_actual.clear(); }
-            else if (c == '"') { if (campo_actual.empty()) en_campo_con_comillas = true; else campo_actual += c; }
-            else { campo_actual += c; }
-        }
-    }
-    campos.push_back(campo_actual);
-    for (std::string& campo : campos) if (!campo.empty() && campo.back() == '\r') campo.pop_back();
-    return campos;
-}
-
-void ejecutarPruebaFormato(float lambda, std::string nombrePrueba, ThashMedicam::HashType tipo) {
-    std::ifstream conteo(ARCHIVO_MEDS);
-    int num_lineas = 0; std::string bas;
-    while(std::getline(conteo, bas)) num_lineas++;
-    conteo.close();
-
-    ThashMedicam tabla(num_lineas, lambda);
-    tabla.setHashType(tipo);
-
-    std::ifstream is(ARCHIVO_MEDS);
-    if(is.is_open()) {
-        std::string fila;
-        while(std::getline(is, fila)) {
-            if(fila.empty()) continue; if(fila.back()=='\r') fila.pop_back();
-            std::vector<std::string> c = parsearFilaCSV(fila);
-            if(c.size()>=3) {
-                try {
-                    int id = std::stoi(c[0]);
-                    PaMedicamento pm(id, c[1], c[2]);
-                    tabla.insertar(id, pm);
-                } catch(...) {}
-            }
-        }
-        is.close();
-    }
-
-    std::cout << nombrePrueba << std::endl;
-    std::cout << "========================" << std::endl;
-    std::cout << "Tamano de la tabla: " << tabla.tamTabla() << std::endl;
-    std::cout << "Numero de medicamentos: " << tabla.getNumElementos() << std::endl;
-    std::cout << "Maximo colisiones: " << tabla.maxColisiones() << std::endl;
-    std::cout << "Factor de carga: " << tabla.factorCarga() << std::endl;
-    std::cout << "Promedio de colisiones: " << tabla.promedioColisiones() << std::endl;
-    std::cout << "Mas de 10 colisiones: " << tabla.numMax10() << std::endl;
-    std::cout << "Total colisiones: " << tabla.getTotalColisiones() << std::endl;
-    std::cout << "Redispersiones: " << tabla.getNumRedispersiones() << std::endl;
-    std::cout << std::endl;
-}
+const std::string ARCHIVO_FARMA = "data/farmacias-coord.csv"; // CSV Nuevo con coordenadas
+const std::string ARCHIVO_USERS = "data/usuarios.csv";
 
 int main() {
-    std::cout << "Factor de carga: 0.65" << std::endl;
-    std::cout << "========================" << std::endl;
-    ejecutarPruebaFormato(0.65, "Cuadratica", ThashMedicam::QUADRATIC);
-    ejecutarPruebaFormato(0.65, "Doble 1", ThashMedicam::DOUBLE_1);
-    ejecutarPruebaFormato(0.65, "Doble 2", ThashMedicam::DOUBLE_2);
-
-    std::cout << "Factor de carga: 0.68" << std::endl;
-    std::cout << "========================" << std::endl;
-    ejecutarPruebaFormato(0.68, "Cuadratica", ThashMedicam::QUADRATIC);
-    ejecutarPruebaFormato(0.68, "Doble 1", ThashMedicam::DOUBLE_1);
-    ejecutarPruebaFormato(0.68, "Doble 2", ThashMedicam::DOUBLE_2);
-
-    std::cout << "La mejor configuracion es lambda = 0.65 y la funcion de dispersion doble h(x) = (h1(x) + i * h2(x)) % t || h2(x) = 1 +\n (x % q) con q primo < t" << std::endl << std::endl;
-
-
-    std::vector<int> todos_los_ids;
-    std::ifstream is_t(ARCHIVO_MEDS);
-    if(is_t.is_open()) {
-        std::string f;
-        while(std::getline(is_t, f)) {
-            if(f.empty()) continue; if(f.back()=='\r') f.pop_back();
-            std::vector<std::string> c = parsearFilaCSV(f);
-            if(c.size()>=3) try { todos_los_ids.push_back(std::stoi(c[0])); } catch(...) {}
-        }
-        is_t.close();
-    }
-
-    MediExpress mediExpress(ARCHIVO_MEDS, ARCHIVO_LABS, ARCHIVO_FARMA);
-
-    std::cout << "Tiempo de busqueda medicamentos en tabla hash vs lista" << std::endl;
-    std::cout << "================================================" << std::endl;
-
-    auto start = std::chrono::high_resolution_clock::now();
-    for(int id : todos_los_ids) mediExpress.buscarCompuesto(id);
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> diffHash = end - start;
-    std::cout << "Tiempo de tabla hash: " << std::fixed << std::setprecision(3) << diffHash.count() << " segs." << std::endl;
-
-    std::list<int> listaMeds(todos_los_ids.begin(), todos_los_ids.end());
-    start = std::chrono::high_resolution_clock::now();
-    for(int id : todos_los_ids) { for(auto it : listaMeds) { if(it == id) break; } }
-    end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> diffList = end - start;
-    std::cout << "Tiempo de lista: " << std::fixed << std::setprecision(3) << diffList.count() << " segs." << std::endl;
-    std::cout.unsetf(std::ios_base::floatfield);
+    // -------------------------------------------------------------------------
+    // INICIALIZACIÓN
+    // -------------------------------------------------------------------------
+    MediExpress medi(ARCHIVO_MEDS, ARCHIVO_LABS, ARCHIVO_FARMA, ARCHIVO_USERS);
     std::cout << std::endl;
 
-    std::cout << "Ejercicio 1: Buscar compuestos por nombre" << std::endl;
-    std::cout << "========================" << std::endl;
-    std::vector<std::string> buscar = {"MAGNESIO CLORURO HEXAHIDRATO", "CLORURO", "ANHIDRO CALCIO CLORURO", "LIDOCAINA HIDROCLORURO", "MENTA PIPERITA", "VIRUS GRIPE"};
-    for(const auto& nombre : buscar) {
-        auto resultados = mediExpress.buscarCompuesto(nombre);
-        std::cout << "Numero de medicamentos " << nombre << ": " << resultados.size() << std::endl;
-        for(auto* m : resultados) std::cout << m->get_nombre() << " (" << m->get_id_num() << ")" << std::endl;
+    // -------------------------------------------------------------------------
+    // EJERCICIO 1: JAEN
+    // -------------------------------------------------------------------------
+    std::cout << "EJERCICIO 1: COMPRAR MEDICAMENTOS EN JAEN" << std::endl;
+    std::cout << "==========================================" << std::endl;
+
+    std::vector<Usuario*> usersJaen;
+    for (auto& par : medi.getUsuarios()) {
+        if (par.second->getProvincia() == "Jaen") {
+            usersJaen.push_back(par.second);
+        }
+    }
+    std::cout << "El numero de usuarios de Jaen es: " << usersJaen.size() << std::endl << std::endl;
+
+    std::vector<std::string> listaMedicamentos = {
+        "MAGNESIO CLORURO HEXAHIDRATO",
+        "LIDOCAINA HIDROCLORURO",
+        "MENTA PIPERITA"
+    };
+
+   int contador = 0;
+    for (Usuario* u : usersJaen) {
+        std::string nombreMed = listaMedicamentos[contador % 3];
+        contador++;
+
+        std::vector<Farmacia*> cercanas = u->getFarmaciaCercana(medi.getMalla(), 1);
+        if (cercanas.empty()) continue;
+        Farmacia* fCercana = cercanas[0];
+
+        std::vector<PaMedicamento*> medsEncontrados = medi.buscarCompuesto(nombreMed);
+        if (medsEncontrados.empty()) continue;
+        PaMedicamento* medAComprar = medsEncontrados[0];
+
+        std::cout << u->getNombre() << " (E" << u->getId() << ")" << std::endl;
+        std::cout << "------------------" << std::endl;
+        std::cout << "La farmacia mas cercana al usuario " << u->getId()
+                  << " (" << u->getLon() << ", " << u->getLat() << ") es la que se encuentra en "
+                  << fCercana->getLocalidad() << " (" << fCercana->getX() << ", " << fCercana->getY() << ")" << std::endl;
+
+        // --- CAMBIO AQUÍ: MOSTRAR STOCK ANTES Y DESPUÉS ---
+
+        // 1. Consultar el stock ANTES de intentar comprar
+        int stockAntes = fCercana->consultarStock(medAComprar->get_id_num());
+
+        // 2. Realizar la compra
+        u->comprarMedicam(medAComprar, 1, fCercana);
+
+        // 3. Consultar el stock DESPUÉS de comprar
+        int stockDespues = fCercana->consultarStock(medAComprar->get_id_num());
+
+        // Lógica de impresión usando los valores reales consultados
+        if (stockAntes > 0) {
+            std::cout << "El usuario " << u->getId() << " quiere comprar " << nombreMed
+                      << " y se le ofrece " << medAComprar->get_nombre() << std::endl;
+
+            // Aquí mostramos ambos valores para que quede claro
+            std::cout << "El usuario compra una unidad de " << medAComprar->get_nombre()
+                      << " (Stock previo: " << stockAntes << ")"
+                      << " quedando en stock: " << stockDespues << " unidades" << std::endl;
+        } else {
+            std::cout << "La farmacia no dispensa " << nombreMed << "." << std::endl;
+            std::cout << "Se procede a suministrar la farmacia con 10 unidades de " << nombreMed << std::endl;
+            medi.suministrarFarmacia(*fCercana, medAComprar->get_id_num(), 10);
+        }
         std::cout << std::endl;
     }
 
+    // -------------------------------------------------------------------------
+    // EJERCICIO 2: SEVILLA
+    // -------------------------------------------------------------------------
+    std::cout << "EJERCICIO 2: COMPRAR MEDICAMENTOS EN SEVILLA" << std::endl;
+    std::cout << "==========================================" << std::endl;
 
-    std::cout << "\nEjercicio 2: Compra de MAGNESIO en Sevilla" << std::endl;
-    std::cout << "========================" << std::endl;
+    std::vector<Usuario*> usersSevilla;
+    for (auto& par : medi.getUsuarios()) {
+        if (par.second->getProvincia() == "SEVILLA") {
+            usersSevilla.push_back(par.second);
+        }
+    }
+    std::cout << "El numero de usuarios de Sevilla es: " << usersSevilla.size() << std::endl << std::endl;
 
-    std::vector<Farmacia*> farmaciasSevilla = mediExpress.buscarFarmacias("SEVILLA");
+    for (Usuario* u : usersSevilla) {
+        std::vector<Farmacia*> cercanas = u->getFarmaciaCercana(medi.getMalla(), 1);
+        if (cercanas.empty()) continue;
+        Farmacia* fCercana = cercanas[0];
 
-    std::vector<PaMedicamento*> listaMagnesios = mediExpress.buscarCompuesto("MAGNESIO");
+        std::vector<PaMedicamento*> posiblesMeds = medi.buscarCompuesto("MAGNESIO");
 
-    for (Farmacia* f : farmaciasSevilla) {
-        std::cout << "\n" << f->getNombre() << std::endl;
-        std::cout << "=============================" << std::endl;
+        bool compraExitosa = false;
+        PaMedicamento* medComprado = nullptr;
 
-        for (int i = 1; i <= 12; ++i) {
-            bool comprado = false;
-
-            for(auto* med : listaMagnesios) {
-                int stock = f->consultarStock(med->get_id_num());
-                if(stock > 0) {
-                    PaMedicamento* temp = nullptr;
-
-                    f->comprarMedicam(med->get_id_num(), 1, temp);
-
-
-                    std::cout << "La persona " << i << " ha solicitado " << med->get_nombre() << std::endl;
-                    std::cout << "La persona " << i << " ha comprado una unidad de " << med->get_nombre()
-                              << " quedan " << (stock - 1) << " unidades en stock" << std::endl;
-                    comprado = true;
-                    break;
-                }
-            }
-
-            if (!comprado) {
-                std::cout << "La persona " << i << " no ha podido comprar MAGNESIO de ningun tipo, ya que la farmacia no dispensa MAGNESIO." << std::endl;
-
-
-
-
-                if (i == 1 || i == 12) {
-                     bool hayStockDeAlgo = false;
-                     for(auto* m : listaMagnesios) if(f->consultarStock(m->get_id_num()) > 0) hayStockDeAlgo = true;
-
-                     if(!hayStockDeAlgo) {
-                         std::cout << "Se piden 10 unidades de OXIDO de MAGNESIO" << std::endl;
-                         mediExpress.suministrarFarmacia(*f, 3640, 10);
-                     }
-                }
+        for (PaMedicamento* med : posiblesMeds) {
+            if (fCercana->consultarStock(med->get_id_num()) > 0) {
+                u->comprarMedicam(med, 1, fCercana);
+                medComprado = med;
+                compraExitosa = true;
+                break;
             }
         }
 
-    }
+        std::cout << u->getNombre() << " (E" << u->getId() << ")" << std::endl;
+        std::cout << "------------------" << std::endl;
+        std::cout << "La farmacia mas cercana al usuario " << u->getId()
+                  << " (" << u->getLon() << ", " << u->getLat() << ") es la que se encuentra en "
+                  << fCercana->getLocalidad() << " (" << fCercana->getX() << ", " << fCercana->getY() << ")" << std::endl;
 
-    std::cout << "Ejercicio 3: Alerta sanitaria en Ubeda" << std::endl;
-    std::cout << "========================" << std::endl;
+        if (compraExitosa) {
+            int stock = fCercana->consultarStock(medComprado->get_id_num());
+            std::cout << "El usuario " << u->getId() << " quiere comprar MAGNESIO y se le ofrece "
+                      << medComprado->get_nombre() << std::endl;
+            std::cout << "El usuario compra una unidad de " << medComprado->get_nombre()
+                      << " quedando en stock: " << stock << std::endl;
+        } else {
+            std::cout << "La farmacia no dispensa ningun tipo de MAGNESIO." << std::endl;
+            std::cout << "Se procede a suministrar la farmacia con 10 unidades de MAGNESIO OXIDO" << std::endl;
 
-    Farmacia* farmaciaUbeda = mediExpress.buscarFarmaciaPorCiudad("UBEDA");
-
-    if(farmaciaUbeda) {
-        std::vector<PaMedicamento*> antigenos = mediExpress.buscarCompuesto("ANTIGENO OLIGOSACARIDO");
-
-        for(auto* med : antigenos) {
-            int stock_ini = farmaciaUbeda->consultarStock(med->get_id_num());
-            std::cout << "El stock inicial de " << med->get_nombre() << " es: " << stock_ini << std::endl;
-
-            mediExpress.suministrarFarmacia(*farmaciaUbeda, med->get_id_num(), 10);
-
-            int stock_fin = farmaciaUbeda->consultarStock(med->get_id_num());
-            std::cout << "El stock despues del pedido es " << stock_fin << std::endl;
+            std::vector<PaMedicamento*> magOxido = medi.buscarCompuesto("MAGNESIO OXIDO");
+            if (!magOxido.empty()) {
+                medi.suministrarFarmacia(*fCercana, magOxido[0]->get_id_num(), 10);
+            }
         }
-    } else {
-        std::cout << "Error: No se ha encontrado ninguna farmacia en UBEDA." << std::endl;
+        std::cout << std::endl;
+    }
+
+    // -------------------------------------------------------------------------
+    // EJERCICIO 3: BORRAR BISMUTO EN MADRID
+    // -------------------------------------------------------------------------
+    std::cout << "EJERCICIO 3: BORRAR BISMUTO EN MADRID" << std::endl;
+    std::cout << "==========================================" << std::endl;
+
+    std::vector<PaMedicamento*> medsBismuto = medi.buscarCompuesto("BISMUTO");
+    std::vector<Usuario*> usersMadrid;
+    for (auto& par : medi.getUsuarios()) {
+        if (par.second->getProvincia() == "MADRID") usersMadrid.push_back(par.second);
+    }
+
+    for (Usuario* u : usersMadrid) {
+        std::vector<Farmacia*> top3 = u->getFarmaciaCercana(medi.getMalla(), 3);
+        bool compro = false;
+        for (Farmacia* f : top3) {
+            if (f->getLocalidad().find("MADRID") != std::string::npos) {
+                for (PaMedicamento* med : medsBismuto) {
+                    if (f->consultarStock(med->get_id_num()) > 0) {
+                        std::cout << "El usuario " << u->getId() << " quiere comprar BISMUTO" << std::endl;
+                        std::cout << "Entra a la farmacia " << f->getNombre()
+                                  << " en " << f->getLocalidad() << std::endl;
+
+                        std::cout << "La farmacia tiene " << f->consultarStock(med->get_id_num())
+                                  << " unidades en stock de " << med->get_nombre() << std::endl;
+
+                        u->comprarMedicam(med, 1, f);
+
+                        std::cout << "El usuario compra una unidad de " << med->get_nombre() << std::endl;
+                        std::cout << "Unidades en stock de " << med->get_nombre() << ": "
+                                  << f->consultarStock(med->get_id_num()) << std::endl << std::endl;
+
+                        compro = true;
+                        break;
+                    }
+                }
+            }
+            if (compro) break;
+        }
+    }
+
+    std::cout << "Se va a proceder a eliminar el BISMUTO..." << std::endl;
+    for (PaMedicamento* med : medsBismuto) {
+        std::string nombre = med->get_nombre();
+        if (medi.eliminarMedicamento(med->get_id_num())) {
+            std::cout << "El medicamento " << nombre << " se ha eliminado" << std::endl;
+        }
     }
     std::cout << std::endl;
 
-    std::cout << "Ejercicio 4: Borrar CIANURO y BISMUTO" << std::endl;
-    std::cout << "========================" << std::endl;
-    std::cout << "Procedemos a buscar y eliminar todos los CIANURO y BISMUTO..." << std::endl;
-    std::vector<std::string> prohibidos = {"CIANURO", "BISMUTO"};
-    for(const auto& nombre : prohibidos) {
-        std::vector<PaMedicamento*> lista = mediExpress.buscarCompuesto(nombre);
-        std::vector<int> ids;
-        for(auto* m : lista) ids.push_back(m->get_id_num());
-        for(int id : ids) mediExpress.eliminarMedicamento(id);
-        std::cout << "Se ha eliminado el " << nombre << std::endl;
+    // -------------------------------------------------------------------------
+    // EJERCICIO 4: PAREJAS (NUEVA FARMACIA)
+    // -------------------------------------------------------------------------
+    std::cout << "EJERCICIO 4: PAREJAS" << std::endl;
+    std::cout << "==========================================" << std::endl;
+
+    std::cout << "Farmacias que hay en Jaen:" << std::endl;
+
+    // CREAR NUEVA FARMACIA CON 9 ARGUMENTOS
+    Farmacia* nuevaF = new Farmacia("12345678A", "JAEN", "JAEN", "FARMACIA NUEVA",
+                                    "PASEO DE ESPANA 35", "23009", "37.78710", "-3.79104", &medi);
+
+    medi.getMalla()->insertar(nuevaF->getX(), nuevaF->getY(), nuevaF);
+
+    std::vector<PaMedicamento*> magnesios = medi.buscarCompuesto("MAGNESIO");
+    for (PaMedicamento* med : magnesios) {
+        nuevaF->nuevoStock(med, 10);
+    }
+
+    std::cout << "Medicamentos que dispensa la nueva farmacia de Jaen:" << std::endl;
+    for (PaMedicamento* med : magnesios) {
+        std::cout << med->get_nombre() << " - stock: " << nuevaF->consultarStock(med->get_id_num()) << std::endl;
     }
     std::cout << std::endl;
 
-    std::cout << "Ejercicio 5: Redispersar" << std::endl;
-    std::cout << "========================" << std::endl;
-    mediExpress.forzarCambioLambda(0.3f);
-    mediExpress.mostrarEstadoTablaHash();
+    Usuario* masCercano = nullptr;
+    double distMin = 99999999.0;
+    for (auto& par : medi.getUsuarios()) {
+        Usuario* u = par.second;
+        double dx = u->getLon() - nuevaF->getX();
+        double dy = u->getLat() - nuevaF->getY();
+        double dist = std::sqrt(dx*dx + dy*dy);
+        if (dist < distMin) {
+            distMin = dist;
+            masCercano = u;
+        }
+    }
 
+    if (masCercano) {
+        std::cout << "El usuario mas cercano a la nueva farmacia de Jaen es: " << masCercano->getId() << std::endl << std::endl;
+
+        std::vector<PaMedicamento*> magOx = medi.buscarCompuesto("MAGNESIO OXIDO");
+        if (!magOx.empty()) {
+            masCercano->comprarMedicam(magOx[0], 3, nuevaF);
+        }
+    }
+
+    std::cout << "Stock de la nueva farmacia de Jaen despues de comprar:" << std::endl;
+    for (PaMedicamento* med : magnesios) {
+        std::cout << med->get_nombre() << " - stock: " << nuevaF->consultarStock(med->get_id_num()) << std::endl;
+    }
+
+    delete nuevaF;
     return 0;
 }

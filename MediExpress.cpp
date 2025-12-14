@@ -4,11 +4,42 @@
 #include <sstream>
 #include <algorithm>
 #include <iterator>
+#include <limits> // Para numeric_limits
+
+std::vector<std::string> parsearFilaCSV(const std::string& linea) {
+    std::vector<std::string> campos;
+    std::string campo_actual;
+    bool en_campo_con_comillas = false;
+    char delimitador = ';';
+    for (size_t i = 0; i < linea.length(); ++i) {
+        char c = linea[i];
+        if (en_campo_con_comillas) {
+            if (c == '"') {
+                if (i + 1 < linea.length() && linea[i + 1] == '"') { campo_actual += '"'; i++; }
+                else { en_campo_con_comillas = false; }
+            } else { campo_actual += c; }
+        } else {
+            if (c == delimitador) { campos.push_back(campo_actual); campo_actual.clear(); }
+            else if (c == '"') { if (campo_actual.empty()) en_campo_con_comillas = true; else campo_actual += c; }
+            else { campo_actual += c; }
+        }
+    }
+    campos.push_back(campo_actual);
+    for (std::string& campo : campos) if (!campo.empty() && campo.back() == '\r') campo.pop_back();
+    return campos;
+}
 
 
-MediExpress::MediExpress(const std::string& archivo_meds, const std::string& archivo_labs, const std::string& archivo_farma) {
-    std::cout << "=== Constructor MediExpress: Carga con Multimap Farmacias ===" << std::endl;
+// Constructor actualizado
+MediExpress::MediExpress(const std::string& archivo_meds, const std::string& archivo_labs,
+                         const std::string& archivo_farma, const std::string& archivo_users) {
 
+    std::cout << "=== Inicializando MediExpress ===" << std::endl;
+    this->grid = nullptr;
+
+    // ---------------------------------------------------------
+    // 1. CARGA DE MEDICAMENTOS (Código Previo)
+    // ---------------------------------------------------------
     std::ifstream conteo(archivo_meds);
     int num_lineas = 0; std::string bas;
     while(std::getline(conteo, bas)) num_lineas++;
@@ -35,6 +66,7 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
     }
     std::cout << vMedi.size() << " medicamentos cargados." << std::endl;
 
+    // Indizar por nombre
     for (int id : vMedi) {
         PaMedicamento* pMed = idMedication->buscar(id);
         if (pMed) {
@@ -44,6 +76,9 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
         }
     }
 
+    // ---------------------------------------------------------
+    // 2. CARGA DE LABORATORIOS (Código Previo)
+    // ---------------------------------------------------------
     std::ifstream is_labs(archivo_labs);
     if (is_labs.is_open()) {
         std::string fila;
@@ -56,7 +91,7 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
         }
         is_labs.close();
     }
-
+    // Enlazar laboratorios con medicamentos
     auto it_lab = laboratorios.begin();
     if (it_lab != laboratorios.end()) {
         for (size_t i = 0; i < vMedi.size(); ++i) {
@@ -68,21 +103,153 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
     }
     this->asignarMedsSinLabAMadrid();
 
-    std::cout << "Paso 5: Cargando farmacias en Multimap..." << std::endl;
+    // ---------------------------------------------------------
+    // 3. CARGA DE FARMACIAS CON COORDENADAS
+    // ---------------------------------------------------------
+    std::cout << "Cargando farmacias y calculando limites UTM..." << std::endl;
+
+    double minX = std::numeric_limits<double>::max();
+    double maxX = std::numeric_limits<double>::lowest();
+    double minY = std::numeric_limits<double>::max();
+    double maxY = std::numeric_limits<double>::lowest();
+
+    // Asegúrate de que ARCHIVO_FARMA apunte a "farmacias-coord.csv" en main.cpp
     std::ifstream is_farma(archivo_farma);
     if (is_farma.is_open()) {
         std::string fila;
         while (std::getline(is_farma, fila)) {
             if (fila.empty()) continue; if(fila.back()=='\r') fila.pop_back();
             std::vector<std::string> c = parsearFilaCSV(fila);
-            if (c.size() == 6) {
-                Farmacia f(c[0], c[1], c[2], c[3], c[4], c[5], this);
-                farmacias.insert(std::make_pair(c[1], f));
+
+            // --- CORRECCIÓN AQUÍ: COMPROBAR 8 COLUMNAS Y PASAR 9 ARGUMENTOS ---
+            if (c.size() >= 8) {
+                // Constructor: CIF, Prov, Loc, Nom, Dir, CP, Lat, Lon, MediExpress*
+                Farmacia f(c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7], this);
+
+                double lat = f.getY();
+                double lon = f.getX();
+                if (lon < minX) minX = lon;
+                if (lon > maxX) maxX = lon;
+                if (lat < minY) minY = lat;
+                if (lat > maxY) maxY = lat;
+
+                farmacias.insert(std::make_pair(c[1], f)); // Clave: Provincia
             }
         }
         is_farma.close();
     }
 
+    // ---------------------------------------------------------
+    // 4. CREACIÓN Y OPTIMIZACIÓN DE LA MALLA REGULAR
+    // ---------------------------------------------------------
+    std::cout << "Coordenadas de la malla: Min[" << minX << ", " << minY << "], Max[" << maxX << ", " << maxY << "]" << std::endl;
+
+    int nDiv = 10; // Empezamos con un número bajo
+    bool mallaOptima = false;
+
+    // Bucle para encontrar el tamaño óptimo (máx elementos por celda entre 10 y 15)
+    // El PDF dice "probar con diferentes números... debiendo estar entre 10-15"
+    while (!mallaOptima) {
+        MallaRegular<Farmacia*> tempGrid(minX, minY, maxX, maxY, nDiv);
+
+        // Insertar todas las farmacias en la malla temporal
+        for (auto& par : farmacias) {
+            tempGrid.insertar(par.second.getX(), par.second.getY(), &par.second);
+        }
+
+        unsigned maxElem = tempGrid.maxElementosPorCelda();
+
+        // Criterio de parada del PDF
+        if (maxElem <= 15 && maxElem >= 10) {
+            // Hemos encontrado la configuración adecuada
+            std::cout << "Probando malla con " << nDiv << " divisiones..." << std::endl;
+            std::cout << "Celda mas poblada con: " << maxElem << std::endl;
+            std::cout << "Media ocupacion: " << tempGrid.promedioElementosPorCelda() << std::endl;
+
+            // Creamos la malla definitiva en el heap
+            this->grid = new MallaRegular<Farmacia*>(minX, minY, maxX, maxY, nDiv);
+            for (auto& par : farmacias) {
+                this->grid->insertar(par.second.getX(), par.second.getY(), &par.second);
+            }
+            mallaOptima = true;
+        } else {
+            // Ajuste simple: Si hay muchas farmacias por celda, aumentamos divisiones
+            // Si hay pocas, las disminuimos (aunque empezamos bajo, así que subimos)
+            if (maxElem > 15) nDiv += 10;
+            else if (maxElem < 10) nDiv -= 5; // Caso raro si empezamos bajo
+
+            if (nDiv <= 1) nDiv = 2; // Seguridad
+            // Seguridad anti-bucle infinito:
+            if (nDiv > 2000) {
+                // Fallback si no convergen los datos
+                this->grid = new MallaRegular<Farmacia*>(minX, minY, maxX, maxY, nDiv);
+                 for (auto& par : farmacias) {
+                    this->grid->insertar(par.second.getX(), par.second.getY(), &par.second);
+                }
+                mallaOptima = true;
+            }
+        }
+    }
+
+ // ---------------------------------------------------------
+    // 5. CARGA DE USUARIOS (ADAPTADO A TU CSV)
+    // ---------------------------------------------------------
+    std::cout << "Cargando usuarios..." << std::endl;
+    std::ifstream is_users(archivo_users);
+    if (is_users.is_open()) {
+        std::string fila;
+        int countUsers = 0;
+        while (std::getline(is_users, fila)) {
+            if (fila.empty()) continue; if(fila.back()=='\r') fila.pop_back();
+            std::vector<std::string> c = parsearFilaCSV(fila);
+
+            try {
+                // CASO A: Tu formato actual (4 columnas: ID;Ciudad;Lat;Lon)
+                if (c.size() >= 4) {
+                    // 1. Reemplazar comas por puntos en las coordenadas
+                    std::replace(c[2].begin(), c[2].end(), ',', '.');
+                    std::replace(c[3].begin(), c[3].end(), ',', '.');
+
+                    // 2. Extraer datos
+                    int id = std::stoi(c[0]);
+                    std::string ciudadProv = c[1]; // Usamos la ciudad como provincia
+                    double lat = std::stod(c[2]);  // Latitud
+                    double lon = std::stod(c[3]);  // Longitud
+
+                    // 3. Generar datos ficticios para Nombre y Dirección (no vienen en el CSV)
+                    std::string nombre = "Usuario " + ciudadProv + " (" + std::to_string(id) + ")";
+                    std::string dir = "Direccion desconocida";
+
+                    // 4. Crear usuario
+                    // Constructor: ID, Nombre, Dir, Provincia, Lat, Lon
+                    Usuario* u = new Usuario(id, nombre, dir, ciudadProv, lat, lon);
+                    users[id] = u;
+                    countUsers++;
+                }
+                // CASO B: Formato original del PDF (6 columnas)
+                else if (c.size() >= 6) {
+                    // Intento de compatibilidad por si cambias de archivo
+                    int id = std::stoi(c[0]);
+                    // Asumimos que aquí ya vienen con puntos
+                    double lat = std::stod(c[4]);
+                    double lon = std::stod(c[5]);
+                    Usuario* u = new Usuario(id, c[1], c[2], c[3], lat, lon);
+                    users[id] = u;
+                    countUsers++;
+                }
+            } catch (...) {
+                // Si falla una línea (ej: cabecera o formato mal), la saltamos sin cerrar el programa
+            }
+        }
+        std::cout << "Usuarios cargados correctamente: " << countUsers << std::endl;
+        is_users.close();
+    } else {
+        std::cerr << "ERROR: No se pudo abrir el archivo de usuarios: " << archivo_users << std::endl;
+    }
+
+    // ---------------------------------------------------------
+    // 6. SUMINISTRO INICIAL (Stock) (Código Previo)
+    // ---------------------------------------------------------
     if (!vMedi.empty()) {
         int farma_index = 0;
         for (auto& par : farmacias) {
@@ -98,7 +265,15 @@ MediExpress::MediExpress(const std::string& archivo_meds, const std::string& arc
     std::cout << "=== Carga Finalizada ===" << std::endl << std::endl;
 }
 
-MediExpress::~MediExpress() { delete idMedication; }
+MediExpress::~MediExpress() {
+    delete idMedication;
+    delete grid; // Limpiar la malla
+    for(auto& p : users) delete p.second; // Limpiar usuarios
+}
+
+// ---------------------------------------------------------
+// RESTO DE MÉTODOS (Sin cambios mayores, solo mantenerlos)
+// ---------------------------------------------------------
 
 int MediExpress::contarMedicamentosSinLab() const {
     int contador = 0;
@@ -106,6 +281,7 @@ int MediExpress::contarMedicamentosSinLab() const {
     for (const auto* med : todos) if (med->getLaboratorio() == nullptr) contador++;
     return contador;
 }
+
 PaMedicamento* MediExpress::buscarCompuesto(int id_num) { return idMedication->buscar(id_num); }
 
 std::vector<PaMedicamento*> MediExpress::buscarCompuesto(const std::string& nombre) {
@@ -116,13 +292,16 @@ std::vector<PaMedicamento*> MediExpress::buscarCompuesto(const std::string& nomb
     if (palabras_busqueda.empty()) return {};
 
     std::set<PaMedicamento*> interseccion;
+    // Primera palabra
     auto range = nombMedication.equal_range(palabras_busqueda[0]);
     for (auto it = range.first; it != range.second; ++it) interseccion.insert(it->second);
 
+    // Intersección con el resto
     for (size_t i = 1; i < palabras_busqueda.size(); ++i) {
         std::set<PaMedicamento*> grupo_actual;
         auto range_w = nombMedication.equal_range(palabras_busqueda[i]);
         for (auto it = range_w.first; it != range_w.second; ++it) grupo_actual.insert(it->second);
+
         std::set<PaMedicamento*> temp;
         std::set_intersection(interseccion.begin(), interseccion.end(),
                               grupo_actual.begin(), grupo_actual.end(),
@@ -220,6 +399,9 @@ void MediExpress::suministrarFarmacia(Farmacia& f, int id_num, int n) {
 
 std::vector<Farmacia*> MediExpress::buscarFarmacias(const std::string& provincia) {
     std::vector<Farmacia*> encontrados;
+    // Buscar por clave en el multimap (suponiendo que la clave es Provincia o Ciudad)
+    // El PDF dice: multimap<string, Farmacia> con clave la PROVINCIA.
+    // OJO: En la carga anterior usé c[2] (Ciudad/Provincia) como clave.
     auto range = farmacias.equal_range(provincia);
     for (auto it = range.first; it != range.second; ++it) encontrados.push_back(&it->second);
     return encontrados;
@@ -241,7 +423,6 @@ bool MediExpress::eliminarMedicamento(int id_num) {
 
 Farmacia* MediExpress::buscarFarmaciaPorCiudad(const std::string& ciudad) {
     for (auto& par : farmacias) {
-
         if (par.second.getLocalidad().find(ciudad) != std::string::npos) {
             return &par.second;
         }
