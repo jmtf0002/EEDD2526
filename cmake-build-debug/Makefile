@@ -56,10 +56,10 @@ RM = C:\Users\javim\AppData\Local\Programs\CLion\bin\cmake\win\x64\bin\cmake.exe
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = C:\Users\javim\Desktop\EEDD\EEDD2526-nuevo
+CMAKE_SOURCE_DIR = C:\Users\javim\Desktop\EEDD\EEDD2526-final
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = C:\Users\javim\Desktop\EEDD\EEDD2526-nuevo\cmake-build-debug
+CMAKE_BINARY_DIR = C:\Users\javim\Desktop\EEDD\EEDD2526-final\cmake-build-debug
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -86,9 +86,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\javim\Desktop\EEDD\EEDD2526-nuevo\cmake-build-debug\CMakeFiles C:\Users\javim\Desktop\EEDD\EEDD2526-nuevo\cmake-build-debug\\CMakeFiles\progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\javim\Desktop\EEDD\EEDD2526-final\cmake-build-debug\CMakeFiles C:\Users\javim\Desktop\EEDD\EEDD2526-final\cmake-build-debug\\CMakeFiles\progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\javim\Desktop\EEDD\EEDD2526-nuevo\cmake-build-debug\CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\javim\Desktop\EEDD\EEDD2526-final\cmake-build-debug\CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -151,6 +151,30 @@ Farmacia.s: Farmacia.cpp.s
 Farmacia.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\EEDD2526.dir\build.make CMakeFiles/EEDD2526.dir/Farmacia.cpp.s
 .PHONY : Farmacia.cpp.s
+
+MallaRegular.obj: MallaRegular.cpp.obj
+.PHONY : MallaRegular.obj
+
+# target to build an object file
+MallaRegular.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\EEDD2526.dir\build.make CMakeFiles/EEDD2526.dir/MallaRegular.cpp.obj
+.PHONY : MallaRegular.cpp.obj
+
+MallaRegular.i: MallaRegular.cpp.i
+.PHONY : MallaRegular.i
+
+# target to preprocess a source file
+MallaRegular.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\EEDD2526.dir\build.make CMakeFiles/EEDD2526.dir/MallaRegular.cpp.i
+.PHONY : MallaRegular.cpp.i
+
+MallaRegular.s: MallaRegular.cpp.s
+.PHONY : MallaRegular.s
+
+# target to generate assembly for a file
+MallaRegular.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\EEDD2526.dir\build.make CMakeFiles/EEDD2526.dir/MallaRegular.cpp.s
+.PHONY : MallaRegular.cpp.s
 
 MediExpress.obj: MediExpress.cpp.obj
 .PHONY : MediExpress.obj
@@ -224,6 +248,54 @@ ThashMedicam.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\EEDD2526.dir\build.make CMakeFiles/EEDD2526.dir/ThashMedicam.cpp.s
 .PHONY : ThashMedicam.cpp.s
 
+Usuario.obj: Usuario.cpp.obj
+.PHONY : Usuario.obj
+
+# target to build an object file
+Usuario.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\EEDD2526.dir\build.make CMakeFiles/EEDD2526.dir/Usuario.cpp.obj
+.PHONY : Usuario.cpp.obj
+
+Usuario.i: Usuario.cpp.i
+.PHONY : Usuario.i
+
+# target to preprocess a source file
+Usuario.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\EEDD2526.dir\build.make CMakeFiles/EEDD2526.dir/Usuario.cpp.i
+.PHONY : Usuario.cpp.i
+
+Usuario.s: Usuario.cpp.s
+.PHONY : Usuario.s
+
+# target to generate assembly for a file
+Usuario.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\EEDD2526.dir\build.make CMakeFiles/EEDD2526.dir/Usuario.cpp.s
+.PHONY : Usuario.cpp.s
+
+img.obj: img.cpp.obj
+.PHONY : img.obj
+
+# target to build an object file
+img.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\EEDD2526.dir\build.make CMakeFiles/EEDD2526.dir/img.cpp.obj
+.PHONY : img.cpp.obj
+
+img.i: img.cpp.i
+.PHONY : img.i
+
+# target to preprocess a source file
+img.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\EEDD2526.dir\build.make CMakeFiles/EEDD2526.dir/img.cpp.i
+.PHONY : img.cpp.i
+
+img.s: img.cpp.s
+.PHONY : img.s
+
+# target to generate assembly for a file
+img.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\EEDD2526.dir\build.make CMakeFiles/EEDD2526.dir/img.cpp.s
+.PHONY : img.cpp.s
+
 main.obj: main.cpp.obj
 .PHONY : main.obj
 
@@ -260,6 +332,9 @@ help:
 	@echo ... Farmacia.obj
 	@echo ... Farmacia.i
 	@echo ... Farmacia.s
+	@echo ... MallaRegular.obj
+	@echo ... MallaRegular.i
+	@echo ... MallaRegular.s
 	@echo ... MediExpress.obj
 	@echo ... MediExpress.i
 	@echo ... MediExpress.s
@@ -269,6 +344,12 @@ help:
 	@echo ... ThashMedicam.obj
 	@echo ... ThashMedicam.i
 	@echo ... ThashMedicam.s
+	@echo ... Usuario.obj
+	@echo ... Usuario.i
+	@echo ... Usuario.s
+	@echo ... img.obj
+	@echo ... img.i
+	@echo ... img.s
 	@echo ... main.obj
 	@echo ... main.i
 	@echo ... main.s

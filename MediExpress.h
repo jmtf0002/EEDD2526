@@ -63,7 +63,9 @@ public:
     // --- NUEVOS MÉTODOS PARA ACCEDER A LA ESTRUCTURA ---
     std::map<int, Usuario*>& getUsuarios() { return users; }
     MallaRegular<Farmacia*>* getMalla() { return grid; }
+
     // ----------------------------------------------------
+    std::multimap<std::string, Farmacia>& getFarmacias() { return farmacias; }
 };
 
 #endif // MEDIEXPRESS_H

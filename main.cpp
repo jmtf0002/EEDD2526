@@ -2,8 +2,11 @@
 #include <vector>
 #include <string>
 #include <iomanip>
+#include <algorithm>
 #include "MediExpress.h"
 #include "Usuario.h"
+#include "img.h"
+
 
 // Definición de archivos
 const std::string ARCHIVO_MEDS = "data/pa_medicamentos.csv";
@@ -93,7 +96,7 @@ int main() {
 
     std::vector<Usuario*> usersSevilla;
     for (auto& par : medi.getUsuarios()) {
-        if (par.second->getProvincia() == "SEVILLA") {
+        if (par.second->getProvincia() == "Sevilla") {
             usersSevilla.push_back(par.second);
         }
     }
@@ -245,5 +248,96 @@ int main() {
     }
 
     delete nuevaF;
+
+    // -------------------------------------------------------------------------
+    // EJERCICIO VOLUNTARIO: VISUALIZACIÓN 2D
+    // -------------------------------------------------------------------------
+    std::cout << "EJERCICIO VOLUNTARIO: Generando mapa de visualizacion..." << std::endl;
+    std::cout << "======================================================" << std::endl;
+
+    // 1. Calcular los límites geográficos  de todas las farmacias
+    double minLat = 90.0, maxLat = -90.0;
+    double minLon = 180.0, maxLon = -180.0;
+
+
+    auto& todasFarmacias = medi.getFarmacias();
+
+    if (todasFarmacias.empty()) {
+        std::cout << "No hay farmacias para visualizar." << std::endl;
+    } else {
+        for (auto& par : todasFarmacias) {
+            Farmacia& f = par.second;
+            // Farmacia usa getX() para longitud y getY() para latitud
+            double lat = f.getY();
+            double lon = f.getX();
+
+            if (lat < minLat) minLat = lat;
+            if (lat > maxLat) maxLat = lat;
+            if (lon < minLon) minLon = lon;
+            if (lon > maxLon) maxLon = lon;
+        }
+
+        // 2. Configuración de la imagen
+        int ancho = 600;
+        int alto = 600;
+        RGBColor blanco(255, 255, 255);
+        Img img(alto, ancho, blanco); // (filas, columnas)
+
+        // 3. Calcular factores de conversión (Píxeles por Grado)
+
+        double rangoLat = maxLat - minLat;
+        double rangoLon = maxLon - minLon;
+
+        // Evitar división por cero si solo hay un punto
+        if (rangoLat == 0) rangoLat = 1.0;
+        if (rangoLon == 0) rangoLon = 1.0;
+
+        double pixelPorGradoLat = (double)(alto - 1) / rangoLat;
+        double pixelPorGradoLon = (double)(ancho - 1) / rangoLon;
+
+        // 4. Dibujar Farmacias (En AZUL)
+
+        for (auto& par : todasFarmacias) {
+            Farmacia& f = par.second;
+
+            // Transformación de coordenadas:
+
+            int px = (int)((f.getX() - minLon) * pixelPorGradoLon);
+            int py = alto - 1 - (int)((f.getY() - minLat) * pixelPorGradoLat);
+
+            // Verificamos límites por seguridad
+            if (px >= 0 && px < ancho && py >= 0 && py < alto) {
+                img.pintarPixel(px, py, 0, 0, 255);
+
+            }
+        }
+
+        // 5. Dibujar Usuarios (En ROJO)
+
+        for (auto& par : medi.getUsuarios()) {
+            Usuario* u = par.second;
+
+
+            int px = (int)((u->getLon() - minLon) * pixelPorGradoLon);
+            int py = alto - 1 - (int)((u->getLat() - minLat) * pixelPorGradoLat);
+
+            if (px >= 0 && px < ancho && py >= 0 && py < alto) {
+
+                img.pintarPixelGrande(px, py, 255, 0, 0);
+            }
+        }
+
+        // 6. Guardar la imagen
+        try {
+            std::string nombreFichero = "mapaResultado.ppm";
+            img.guardar(nombreFichero);
+            std::cout << "Imagen guardada correctamente como: " << nombreFichero << std::endl;
+            std::cout << "Dimensiones: " << ancho << "x" << alto << " pixeles." << std::endl;
+            std::cout << "Rango Latitud: [" << minLat << ", " << maxLat << "]" << std::endl;
+            std::cout << "Rango Longitud: [" << minLon << ", " << maxLon << "]" << std::endl;
+        } catch (ErrorEscrituraFichero& e) {
+            std::cout << "Error critico al guardar el fichero de imagen." << std::endl;
+        }
+    }
     return 0;
 }

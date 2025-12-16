@@ -20,4 +20,6 @@ add_executable(EEDD2526
         Usuario.h
         MallaRegular.h
         MallaRegular.cpp
+        img.h
+        img.cpp
 )
